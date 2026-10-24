@@ -83,6 +83,12 @@ input:focus-visible, textarea:focus-visible, button:focus-visible {
 }
 .bg-wa-green.text-white:hover { filter: brightness(1.05); }
 
+/* Keep chat text readable against the light message bubbles. */
+.chat-bg .text-wa-text { color: #17211d !important; }
+.chat-bg .text-wa-secondary { color: #52635b !important; }
+.chat-bg .text-wa-muted { color: #64756d !important; }
+.chat-bg .text-wa-green-dark { color: #087f5b !important; }
+
 .chat-bg {
   background-color: #0d1511;
   background-image: url("data:image/svg+xml,%3Csvg width='72' height='72' viewBox='0 0 72 72' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%2339d98a' stroke-opacity='.055' stroke-width='1'%3E%3Cpath d='M12 14h12v12H12zM48 46h12v12H48zM48 10l8 8-8 8-8-8zM14 48l6-6 6 6-6 6z'/%3E%3Ccircle cx='53' cy='17' r='3'/%3E%3Ccircle cx='20' cy='54' r='3'/%3E%3C/g%3E%3C/svg%3E");
