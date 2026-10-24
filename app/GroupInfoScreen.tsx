@@ -126,13 +126,18 @@ export default function GroupInfoScreen({
         <button onClick={onClose} className="text-wa-secondary p-1">
           <ArrowLeft size={24} />
         </button>
-        <button className="text-wa-secondary p-1">
-          <MoreVertical size={20} />
-        </button>
+        {tab === "permissoes" ? (
+          <span className="text-[16px] font-medium text-wa-text mr-auto ml-3">Permissões do grupo</span>
+        ) : (
+          <button className="text-wa-secondary p-1">
+            <MoreVertical size={20} />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="bg-wa-panel flex flex-col items-center pt-2 pb-5 px-4">
+{tab !== "permissoes" && (
+                <div className="bg-wa-panel flex flex-col items-center pt-2 pb-5 px-4">
           <div className="w-28 h-28 rounded-full bg-wa-green flex items-center justify-center text-white font-bold text-5xl shadow-md mb-4 overflow-hidden">
             {group.photo ? <img src={group.photo} alt={`Foto de ${group.name}`} className="w-full h-full object-cover" /> : group.name.charAt(0)}
           </div>
@@ -158,6 +163,7 @@ export default function GroupInfoScreen({
           </div>
 
         </div>
+        )}
 
         {tab !== "permissoes" && <div className="bg-wa-panel mt-2 flex border-b border-wa-border sticky top-0 z-10">
           {(
