@@ -5,7 +5,7 @@ import {
   KeyRound, Lock, MessageSquare, Paintbrush, Bot, Palette, LogOut, X, EyeOff,
   Check, Crown, Sparkles, ShieldCheck, TrendingUp, Users, Zap, Star,
 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   nickname: string;
@@ -15,18 +15,41 @@ type Props = {
   hideProfilePhoto: boolean;
   onProfilePhotoChange: (photo: string) => void;
   onToggleHideProfilePhoto: () => void;
+  contactNames?: string[];
 };
 
-export default function ProfileScreen({ nickname, onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onToggleHideProfilePhoto }: Props) {
+export default function ProfileScreen({ nickname, onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onToggleHideProfilePhoto, contactNames = [] }: Props) {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
+  const [lastSeen, setLastSeen] = useState<"todos" | "ninguem">("todos");
+  const [hiddenPhotoContacts, setHiddenPhotoContacts] = useState<string[]>([]);
+  const [durationDays, setDurationDays] = useState("7");
+
+  useEffect(() => {
+    try {
+      const savedLastSeen = localStorage.getItem("dff_last_seen");
+      const savedHiddenContacts = localStorage.getItem("dff_hidden_photo_contacts");
+      const savedDuration = localStorage.getItem("dff_default_duration");
+      if (savedLastSeen === "todos" || savedLastSeen === "ninguem") setLastSeen(savedLastSeen);
+      if (savedHiddenContacts) setHiddenPhotoContacts(JSON.parse(savedHiddenContacts));
+      if (savedDuration) setDurationDays(savedDuration);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("dff_last_seen", lastSeen);
+      localStorage.setItem("dff_hidden_photo_contacts", JSON.stringify(hiddenPhotoContacts));
+      localStorage.setItem("dff_default_duration", durationDays);
+    } catch {}
+  }, [lastSeen, hiddenPhotoContacts, durationDays]);
   const [showSubscriptions, setShowSubscriptions] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"mensal" | "anual">("anual");
   const items = [
     { icon: Diamond, title: "Assinaturas", desc: "Conheça os benefícios premium" },
     { icon: KeyRound, title: "Conta", desc: "Gmail da conta e senha" },
-    { icon: Lock, title: "Privacidade", desc: "Contas bloqueadas, mensagens temporárias" },
+    { icon: Lock, title: "Privacidade", desc: "Visto por último, foto de perfil e duração padrão" },
     { icon: MessageSquare, title: "Conversas", desc: "Histórico de conversas, backup" },
     { icon: Paintbrush, title: "Aparência", desc: "Tema da conversa, ícone do app, tema do app" },
     { icon: Bot, title: "Bots", desc: "Configurações de bots" },
@@ -213,23 +236,44 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
         </div>
       )}
       {showPrivacy && (
-        <div className="fixed inset-0 z-[60] bg-black/40 flex items-end sm:items-center justify-center" onClick={() => setShowPrivacy(false)}>
-          <div className="w-full max-w-md bg-wa-panel rounded-t-2xl sm:rounded-2xl p-5 shadow-xl" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-medium text-wa-text">Privacidade</h2>
-              <button onClick={() => setShowPrivacy(false)} className="p-1 text-wa-secondary" aria-label="Fechar"><X size={20} /></button>
-            </div>
-            <div className="flex items-start gap-3 py-3">
-              <EyeOff size={22} className="text-wa-secondary mt-0.5 shrink-0" />
-              <div className="flex-1">
-                <p className="text-[15px] text-wa-text">Ocultar minha foto de perfil</p>
-                <p className="text-[13px] text-wa-secondary mt-1">Quando ativada, sua foto não deve aparecer para outras pessoas.</p>
+        <div className="fixed inset-0 z-[60] bg-wa-bg flex flex-col">
+          <div className="bg-wa-panel px-3 py-3 flex items-center gap-3 border-b border-wa-border shrink-0">
+            <button onClick={() => setShowPrivacy(false)} className="text-wa-secondary p-1" aria-label="Voltar às configurações"><ArrowLeft size={24} /></button>
+            <div><h2 className="text-lg font-semibold text-wa-text">Privacidade</h2><p className="text-xs text-wa-secondary">Controle o que outras pessoas podem ver</p></div>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="bg-wa-panel mt-2 px-4 py-4">
+              <p className="text-[16px] font-medium text-wa-text">Visto por último e online</p>
+              <p className="text-[13px] text-wa-secondary mt-1 mb-3">Escolha quem pode ver quando você esteve online ou se está online agora.</p>
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 text-sm text-wa-text"><input type="radio" name="lastSeen" checked={lastSeen === "todos"} onChange={() => setLastSeen("todos")} className="accent-emerald-600" /> Todos podem ver</label>
+                <label className="flex items-center gap-3 text-sm text-wa-text"><input type="radio" name="lastSeen" checked={lastSeen === "ninguem"} onChange={() => setLastSeen("ninguem")} className="accent-emerald-600" /> Ninguém pode ver</label>
               </div>
-              <button onClick={onToggleHideProfilePhoto} role="switch" aria-checked={hideProfilePhoto} className={`w-11 h-6 rounded-full p-0.5 transition ${hideProfilePhoto ? "bg-wa-green" : "bg-wa-muted"}`}>
-                <span className={`block w-5 h-5 rounded-full bg-white transition-transform ${hideProfilePhoto ? "translate-x-5" : "translate-x-0"}`} />
-              </button>
             </div>
-            <button onClick={() => setShowPrivacy(false)} className="mt-3 w-full rounded-lg bg-wa-green text-white py-2.5 font-medium">Concluir</button>
+            <div className="bg-wa-panel mt-2 px-4 py-4">
+              <p className="text-[16px] font-medium text-wa-text">Foto de perfil</p>
+              <p className="text-[13px] text-wa-secondary mt-1 mb-3">Selecione os contatos que você não quer que vejam sua foto.</p>
+              {contactNames.length === 0 ? <p className="text-sm text-wa-secondary">Nenhum contato encontrado por enquanto.</p> : (
+                <div className="space-y-1">
+                  {contactNames.map((contact) => (
+                    <label key={contact} className="flex items-center gap-3 py-2 text-sm text-wa-text">
+                      <input type="checkbox" checked={hiddenPhotoContacts.includes(contact)} onChange={(event) => setHiddenPhotoContacts((prev) => event.target.checked ? [...prev, contact] : prev.filter((name) => name !== contact))} className="accent-emerald-600" />
+                      <span className="w-9 h-9 rounded-full bg-wa-green/15 text-wa-green flex items-center justify-center font-medium">{contact.charAt(0).toUpperCase()}</span>
+                      <span>{contact}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              <p className="text-[11px] text-wa-muted mt-2">A lista usa nomes que já apareceram nas conversas deste aparelho.</p>
+            </div>
+            <div className="bg-wa-panel mt-2 px-4 py-4 mb-6">
+              <p className="text-[16px] font-medium text-wa-text">Duração padrão</p>
+              <p className="text-[13px] text-wa-secondary mt-1 mb-3">Escolha por quantos dias as conversas devem ficar.</p>
+              <select value={durationDays} onChange={(event) => setDurationDays(event.target.value)} className="w-full rounded-lg border border-wa-border bg-wa-bg text-wa-text px-3 py-3 outline-none">
+                <option value="1">1 dia</option><option value="7">7 dias</option><option value="30">30 dias</option><option value="90">90 dias</option>
+              </select>
+              <p className="text-[11px] text-wa-muted mt-2">A preferência fica salva neste aparelho; apagar conversas automaticamente ainda precisa ser implementado.</p>
+            </div>
           </div>
         </div>
       )}
