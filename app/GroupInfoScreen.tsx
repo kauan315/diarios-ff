@@ -243,7 +243,7 @@ export default function GroupInfoScreen({
             </button>
             <p className="px-4 pt-5 pb-2 text-sm text-wa-secondary">Quem pode fazer estas ações?</p>
             {[
-              { title: "Adicionar outros participantes", subtitle: group.requireAdminApproval ? "Somente administradores podem adicionar participantes" : "Todos os participantes podem adicionar outros", active: !!group.requireAdminApproval, action: onToggleAdminApproval },
+              { title: "Aprovar novos participantes", subtitle: group.requireAdminApproval ? "Novos participantes precisam de aprovação dos administradores" : "Novos participantes não precisam de aprovação", active: !!group.requireAdminApproval, action: onToggleAdminApproval },
               { title: "Enviar mensagens", subtitle: group.onlyAdminsCanSend ? "Somente administradores" : "Todos os participantes", active: group.onlyAdminsCanSend, action: onToggleOnlyAdmins },
               { title: "Editar configurações do grupo", subtitle: group.onlyAdminsCanEdit ? "Somente administradores" : "Todos os participantes", active: !!group.onlyAdminsCanEdit, action: onToggleOnlyAdminsCanEdit },
             ].map((permission) => (
