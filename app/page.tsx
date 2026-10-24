@@ -187,14 +187,6 @@ export default function Home() {
     setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, onlyAdminsCanEdit: !g.onlyAdminsCanEdit } : g));
   };
 
-  const promoteAllMembers = () => {
-    if (!selectedGroupId || !selectedGroup || !isCurrentUserAdmin(selectedGroup)) return;
-    if (!confirm("Promover todos os membros deste grupo a administradores?")) return;
-    setGroups((prev) => prev.map((g) => g.id === selectedGroupId
-      ? { ...g, allMembersAreAdmins: true, adminNames: Array.from(new Set([...(g.adminNames || []), ...(g.memberNames || []), nickname].filter(Boolean))) }
-      : g));
-  };
-
   const toggleFavorite = () => {
     if (!selectedGroupId) return;
     setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, isFavorite: !g.isFavorite } : g));
@@ -640,7 +632,6 @@ export default function Home() {
                 onToggleOnlyAdmins={toggleOnlyAdmins}
                 onToggleAdminApproval={toggleAdminApproval}
                 onToggleOnlyAdminsCanEdit={toggleOnlyAdminsCanEdit}
-                onPromoteAllMembers={promoteAllMembers}
                 onToggleFavorite={toggleFavorite}
               />
             )}
