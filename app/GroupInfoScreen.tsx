@@ -214,7 +214,7 @@ export default function GroupInfoScreen({
                     <p className="text-sm text-wa-secondary">{m.phone}</p>
                   )}
                 </div>
-                {m.isAdmin && (
+                {(m.isAdmin || group.allMembersAreAdmins) && (
                   <span className="text-[11px] text-wa-green bg-wa-green/10 px-2 py-0.5 rounded-md shrink-0">
                     Admin do grupo
                   </span>
