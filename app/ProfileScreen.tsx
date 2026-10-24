@@ -24,9 +24,9 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
-  const [themePreset, setThemePreset] = useState("classic-green");
+  const [themePreset, setThemePreset] = useState("sky-blue");
   const [themeLoaded, setThemeLoaded] = useState(false);
-  const [themeColor, setThemeColor] = useState("green");
+  const [themeColor, setThemeColor] = useState("blue");
   const [themeMode, setThemeMode] = useState<"light" | "dark">("light");
   const [showAccount, setShowAccount] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -58,8 +58,14 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
       const savedColor = localStorage.getItem("dff_theme_color");
       const savedMode = localStorage.getItem("dff_theme_mode");
       const savedPreset = localStorage.getItem("dff_theme_preset");
-      if (savedPreset && ["classic-green", "pink-candy", "sky-blue", "ruby-red", "neon-cyber", "galaxy-purple", "royal-gold", "toxic-acid", "sunset-fire", "midnight"].includes(savedPreset)) setThemePreset(savedPreset);
-      if (savedColor && ["green", "pink", "blue", "red"].includes(savedColor)) setThemeColor(savedColor);
+      // Migrate the old default green theme to the new sky-blue-and-white default.
+      if (savedPreset === "classic-green" || (!savedPreset && savedColor === "green")) {
+        setThemePreset("sky-blue");
+        setThemeColor("blue");
+      } else {
+        if (savedPreset && ["classic-green", "pink-candy", "sky-blue", "ruby-red", "neon-cyber", "galaxy-purple", "royal-gold", "toxic-acid", "sunset-fire", "midnight"].includes(savedPreset)) setThemePreset(savedPreset);
+        if (savedColor && ["green", "pink", "blue", "red"].includes(savedColor)) setThemeColor(savedColor);
+      }
       if (savedMode === "light" || savedMode === "dark") setThemeMode(savedMode);
     } catch {}
     setThemeLoaded(true);
