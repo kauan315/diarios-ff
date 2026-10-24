@@ -123,7 +123,7 @@ export default function GroupInfoScreen({
         </div>
       )}
       <div className="bg-wa-panel px-3 py-2.5 flex items-center justify-between shrink-0">
-        <button onClick={onClose} className="text-wa-secondary p-1">
+        <button onClick={() => tab === "permissoes" ? setTab("config") : onClose()} className="text-wa-secondary p-1">
           <ArrowLeft size={24} />
         </button>
         {tab === "permissoes" ? (
@@ -237,10 +237,6 @@ export default function GroupInfoScreen({
 
         {tab === "permissoes" && canManage && (
           <div className="bg-wa-panel min-h-full">
-            <button onClick={() => setTab("config")} className="w-full flex items-center gap-3 px-4 py-4 text-left border-b border-wa-border hover:bg-wa-hover">
-              <ArrowLeft size={22} className="text-wa-secondary" />
-              <span className="text-[17px] font-medium text-wa-text">Permissões do grupo</span>
-            </button>
             <p className="px-4 pt-5 pb-2 text-sm text-wa-secondary">Quem pode fazer estas ações?</p>
             {[
               { title: "Aprovar novos participantes", subtitle: group.requireAdminApproval ? "Novos participantes precisam de aprovação dos administradores" : "Novos participantes não precisam de aprovação", active: !!group.requireAdminApproval, action: onToggleAdminApproval },
