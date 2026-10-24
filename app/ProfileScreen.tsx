@@ -303,6 +303,75 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
           </div>
         </div>
       )}
+      {showThemes && (
+        <div className="fixed inset-0 z-[80] bg-wa-bg flex flex-col">
+          <div className="bg-wa-panel px-3 py-3 flex items-center gap-3 border-b border-wa-border shrink-0">
+            <button onClick={() => setShowThemes(false)} className="text-wa-secondary p-1" aria-label="Voltar às configurações">
+              <ArrowLeft size={24} />
+            </button>
+            <div>
+              <h2 className="text-lg font-semibold text-wa-text">Temas</h2>
+              <p className="text-xs text-wa-secondary">Personalize suas conversas</p>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <h3 className="font-semibold text-wa-text mb-1">Temas grátis</h3>
+            <p className="text-xs text-wa-secondary mb-3">Mude a cor das bolhas sem alterar o visual normal do chat.</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { id: "classic-green", name: "Clássico Verde", color: "#d9fdd3", accent: "green" },
+                { id: "pink-candy", name: "Rosa Candy", color: "#f8c7dd", accent: "pink" },
+                { id: "sky-blue", name: "Azul Céu", color: "#c9e3ff", accent: "blue" },
+                { id: "ruby-red", name: "Ruby", color: "#ffd0d2", accent: "red" },
+              ].map((theme) => (
+                <button key={theme.id} onClick={() => { setThemePreset(theme.id); setThemeColor(theme.accent); setThemeMode("dark"); }} className={`rounded-2xl border p-3 text-left transition ${themePreset === theme.id ? "border-wa-green ring-2 ring-wa-green/30" : "border-wa-border"} bg-wa-panel`}>
+                  <div className="rounded-xl bg-[#202c33] p-2.5 space-y-2 mb-2">
+                    <div className="h-5 w-3/4 rounded-xl bg-white" />
+                    <div className="ml-auto h-6 w-4/5 rounded-xl" style={{ backgroundColor: theme.color }} />
+                    <div className="h-5 w-1/2 rounded-xl bg-white" />
+                  </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-sm font-medium text-wa-text">{theme.name}</span>
+                    {themePreset === theme.id && <Check size={16} className="text-wa-green" />}
+                  </div>
+                  <span className="text-[11px] text-wa-secondary">Grátis</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center justify-between mt-7 mb-1">
+              <h3 className="font-semibold text-wa-text">Temas Premium</h3>
+              <span className="text-[10px] font-bold text-amber-500 border border-amber-500/40 rounded-full px-2 py-1">PREMIUM</span>
+            </div>
+            <p className="text-xs text-wa-secondary mb-3">Estilos especiais com fundos, formatos de bolhas e animações.</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { id: "neon-cyber", name: "Neon Cyber", color: "#00e5ff", bg: "linear-gradient(135deg,#071b35,#123e57)" },
+                { id: "galaxy-purple", name: "Galaxy Roxo", color: "#c084fc", bg: "linear-gradient(135deg,#160b2b,#49217b)" },
+                { id: "royal-gold", name: "Ouro Real", color: "#f5c451", bg: "linear-gradient(135deg,#20190b,#5b4314)" },
+                { id: "toxic-acid", name: "Toxic Acid", color: "#b7ff00", bg: "linear-gradient(135deg,#10200b,#294719)" },
+                { id: "sunset-fire", name: "Sunset Fire", color: "#ff7849", bg: "linear-gradient(135deg,#351018,#822e25)" },
+                { id: "midnight", name: "Midnight", color: "#8ab4f8", bg: "linear-gradient(135deg,#101827,#283b55)" },
+              ].map((theme) => (
+                <button key={theme.id} onClick={() => alert("Este tema é exclusivo do Premium. A integração de pagamento ainda precisa ser feita para desbloqueá-lo.")} className="rounded-2xl border border-wa-border bg-wa-panel p-3 text-left">
+                  <div className="rounded-xl p-2.5 space-y-2 mb-2" style={{ background: theme.bg }}>
+                    <div className="h-5 w-3/4 rounded-lg bg-white/20 border border-white/10" />
+                    <div className="ml-auto h-6 w-4/5 rounded-[10px] border" style={{ background: theme.color, borderColor: theme.color, boxShadow: `0 0 10px ${theme.color}55` }} />
+                    <div className="h-5 w-1/2 rounded-lg bg-white/20 border border-white/10" />
+                  </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-sm font-medium text-wa-text">{theme.name}</span>
+                    <Lock size={14} className="text-amber-500 shrink-0" />
+                  </div>
+                  <span className="text-[11px] text-amber-500">Exclusivo Premium</span>
+                </button>
+              ))}
+            </div>
+            <button onClick={() => { setShowThemes(false); setShowSubscriptions(true); }} className="w-full mt-5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold py-3.5">
+              <Crown size={17} className="inline mr-2" />Conhecer o Premium
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
