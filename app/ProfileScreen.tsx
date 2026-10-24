@@ -50,7 +50,6 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
     { icon: Diamond, title: "Assinaturas", desc: "Conheça os benefícios premium" },
     { icon: KeyRound, title: "Conta", desc: "Gmail da conta e senha" },
     { icon: Lock, title: "Privacidade", desc: "Visto por último, foto de perfil e duração padrão" },
-    { icon: MessageSquare, title: "Conversas", desc: "Histórico de conversas, backup" },
     { icon: Paintbrush, title: "Aparência", desc: "Tema da conversa, ícone do app, tema do app" },
     { icon: Bot, title: "Bots", desc: "Configurações de bots" },
     { icon: Palette, title: "Temas", desc: "Aparência personalizada" },
