@@ -46,6 +46,8 @@ function saveToStorage(key: string, value: unknown) {
 
 export default function Home() {
   const [nickname, setNickname] = useState("");
+  const [profilePhoto, setProfilePhoto] = useState("");
+  const [hideProfilePhoto, setHideProfilePhoto] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [tempNickname, setTempNickname] = useState("");
   const [screen, setScreen] = useState<"conversas" | "comunidades">("conversas");
@@ -65,18 +67,23 @@ export default function Home() {
 
   useEffect(() => {
     const savedNick = loadFromStorage<string>("dff_nickname", "");
+    const savedProfilePhoto = loadFromStorage<string>("dff_profile_photo", "");
+    const savedHideProfilePhoto = loadFromStorage<boolean>("dff_hide_profile_photo", false);
     const savedGroups = loadFromStorage<Group[]>("dff_groups", DEFAULT_GROUPS);
     const savedMessages = loadFromStorage<Record<number, Message[]>>("dff_messages", DEFAULT_MESSAGES);
     if (savedNick) { setNickname(savedNick); setIsLoggedIn(true); }
+    setProfilePhoto(savedProfilePhoto); setHideProfilePhoto(savedHideProfilePhoto);
     setGroups(savedGroups); setMessages(savedMessages); setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
     saveToStorage("dff_nickname", nickname);
+    saveToStorage("dff_profile_photo", profilePhoto);
+    saveToStorage("dff_hide_profile_photo", hideProfilePhoto);
     saveToStorage("dff_groups", groups);
     saveToStorage("dff_messages", messages);
-  }, [nickname, groups, messages, hydrated]);
+  }, [nickname, profilePhoto, hideProfilePhoto, groups, messages, hydrated]);
 
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) || null;
   const currentMessages = selectedGroupId ? messages[selectedGroupId] || [] : [];
@@ -475,6 +482,10 @@ export default function Home() {
       {showSettings && (
         <ProfileScreen
           nickname={nickname}
+          profilePhoto={profilePhoto}
+          hideProfilePhoto={hideProfilePhoto}
+          onProfilePhotoChange={setProfilePhoto}
+          onToggleHideProfilePhoto={() => setHideProfilePhoto((value) => !value)}
           onClose={() => setShowSettings(false)}
           onLogout={handleLogout}
         />
