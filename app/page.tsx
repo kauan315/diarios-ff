@@ -210,10 +210,6 @@ export default function Home() {
             <h1 className="text-lg font-medium text-wa-text">Comunidades FF</h1>
             <p className="text-xs text-wa-secondary">Descubra e entre em diários</p>
           </div>
-          <button onClick={() => { setCreateKind("comunidade"); setShowCreateGroup(true); }}
-            className="bg-wa-green text-white px-3.5 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 hover:bg-wa-green-dark">
-            <Plus size={16} /> Cadastrar
-          </button>
         </div>
         <div className="px-3 py-2 bg-wa-panel shrink-0">
           <div className="flex items-center bg-wa-input rounded-lg px-3 py-2 gap-3">
