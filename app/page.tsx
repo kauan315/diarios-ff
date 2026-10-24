@@ -411,8 +411,8 @@ export default function Home() {
           ) : myChats.map((group) => (
             <button key={group.id} onClick={() => { setSelectedGroupId(group.id); setShowGroupInfo(false); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-wa-hover text-left ${selectedGroupId === group.id ? "bg-wa-hover" : ""}`}>
-              <div className="w-[52px] h-[52px] rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-xl shrink-0">
-                {group.name.charAt(0)}
+              <div className="w-[52px] h-[52px] rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-xl shrink-0 overflow-hidden">
+                {group.photo ? <img src={group.photo} alt={group.name} className="w-full h-full object-cover" /> : group.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0 py-1 border-b border-wa-border">
                 <div className="flex justify-between items-baseline gap-2">
@@ -488,10 +488,10 @@ export default function Home() {
                 <ArrowLeft size={24} />
               </button>
               <div
-                className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold cursor-pointer shrink-0"
+                className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold cursor-pointer shrink-0 overflow-hidden"
                 onClick={() => setShowGroupInfo(true)}
               >
-                {selectedGroup.name.charAt(0)}
+                {selectedGroup.photo ? <img src={selectedGroup.photo} alt={selectedGroup.name} className="w-full h-full object-cover" /> : selectedGroup.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setShowGroupInfo(true)}>
                 <h2 className="font-medium text-wa-text truncate text-[16px]">{selectedGroup.name}</h2>
