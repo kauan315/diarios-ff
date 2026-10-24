@@ -76,6 +76,10 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const savedThemeColor = localStorage.getItem("dff_theme_color");
+    const savedThemeMode = localStorage.getItem("dff_theme_mode");
+    document.documentElement.dataset.theme = savedThemeColor && ["green", "pink", "blue", "red"].includes(savedThemeColor) ? savedThemeColor : "green";
+    document.documentElement.dataset.mode = savedThemeMode === "light" ? "light" : "dark";
     const savedNick = loadFromStorage<string>("dff_nickname", "");
     const savedProfilePhoto = loadFromStorage<string>("dff_profile_photo", "");
     const savedHideProfilePhoto = loadFromStorage<boolean>("dff_hide_profile_photo", false);
