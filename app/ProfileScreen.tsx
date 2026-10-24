@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  ArrowLeft, Search, QrCode, Pencil, ChevronDown, CreditCard, Diamond, Monitor,
-  KeyRound, Lock, Contact, MessageSquare, Paintbrush, Bot, Palette, LogOut,
+  ArrowLeft, Search, QrCode, Pencil, ChevronDown, Diamond,
+  KeyRound, Lock, MessageSquare, Paintbrush, Bot, Palette, LogOut,
 } from "lucide-react";
 
 type Props = {
@@ -13,12 +13,9 @@ type Props = {
 
 export default function ProfileScreen({ nickname, onClose, onLogout }: Props) {
   const items = [
-    { icon: CreditCard, title: "Pagamentos", desc: "" },
     { icon: Diamond, title: "Assinaturas", desc: "Conheça os benefícios premium" },
-    { icon: Monitor, title: "Dispositivos conectados", desc: "Use o Diários FF em outros dispositivos" },
     { icon: KeyRound, title: "Conta", desc: "Notificações de segurança, mudança de nickname" },
     { icon: Lock, title: "Privacidade", desc: "Contas bloqueadas, mensagens temporárias" },
-    { icon: Contact, title: "Listas", desc: "Gerencie pessoas e grupos" },
     { icon: MessageSquare, title: "Conversas", desc: "Histórico de conversas, backup" },
     { icon: Paintbrush, title: "Aparência", desc: "Tema da conversa, ícone do app, tema do app" },
     { icon: Bot, title: "Bots", desc: "Configurações de bots" },
