@@ -20,11 +20,12 @@ type Props = {
 export default function ProfileScreen({ nickname, onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onToggleHideProfilePhoto }: Props) {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
   const [showSubscriptions, setShowSubscriptions] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"mensal" | "anual">("anual");
   const items = [
     { icon: Diamond, title: "Assinaturas", desc: "Conheça os benefícios premium" },
-    { icon: KeyRound, title: "Conta", desc: "Notificações de segurança, mudança de nickname" },
+    { icon: KeyRound, title: "Conta", desc: "Gmail da conta e senha" },
     { icon: Lock, title: "Privacidade", desc: "Contas bloqueadas, mensagens temporárias" },
     { icon: MessageSquare, title: "Conversas", desc: "Histórico de conversas, backup" },
     { icon: Paintbrush, title: "Aparência", desc: "Tema da conversa, ícone do app, tema do app" },
@@ -90,6 +91,7 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
               key={item.title}
               onClick={() => {
                 if (item.title === "Assinaturas") { setShowSubscriptions(true); return; }
+                if (item.title === "Conta") { setShowAccount(true); return; }
                 if (item.title === "Privacidade") { setShowPrivacy(true); return; }
                 if (item.title === "Bots" || item.title === "Temas") {
                   alert(`${item.title} — em breve você me fala como funciona`);
@@ -116,6 +118,36 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
           </button>
         </div>
       </div>
+      {showAccount && (
+        <div className="fixed inset-0 z-[65] bg-wa-bg flex flex-col">
+          <div className="bg-wa-panel px-3 py-3 flex items-center gap-3 border-b border-wa-border shrink-0">
+            <button onClick={() => setShowAccount(false)} className="text-wa-secondary p-1" aria-label="Voltar às configurações">
+              <ArrowLeft size={24} />
+            </button>
+            <div>
+              <h2 className="text-lg font-semibold text-wa-text">Conta</h2>
+              <p className="text-xs text-wa-secondary">Configurações da sua conta</p>
+            </div>
+          </div>
+          <div className="bg-wa-panel mt-2">
+            <div className="w-full flex items-center gap-4 px-4 py-4 text-left">
+              <KeyRound size={22} className="text-wa-secondary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[16px] text-wa-text">Gmail da conta</p>
+                <p className="text-[13px] text-wa-secondary mt-0.5">E-mail vinculado à sua conta</p>
+              </div>
+            </div>
+            <div className="mx-4 border-b border-wa-border" />
+            <div className="w-full flex items-center gap-4 px-4 py-4 text-left">
+              <Lock size={22} className="text-wa-secondary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[16px] text-wa-text">Senha</p>
+                <p className="text-[13px] text-wa-secondary mt-0.5">Segurança e acesso à conta</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {showSubscriptions && (
         <div className="fixed inset-0 z-[70] bg-wa-bg flex flex-col">
           <div className="bg-wa-panel px-3 py-3 flex items-center gap-3 border-b border-wa-border shrink-0">
