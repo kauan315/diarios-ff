@@ -17,6 +17,7 @@ import {
   UserPlus,
   LogOut,
   X,
+  Compass,
 } from "lucide-react";
 
 type Message = {
@@ -86,6 +87,17 @@ const initialGroups: Group[] = [
     onlyAdminsCanSend: true,
     isJoined: true,
   },
+  {
+    id: 5,
+    name: "Free Fire Latinoamérica",
+    description: "Comunidad de Free Fire para jugadores de Latinoamérica",
+    members: 3200,
+    lastMessage: "¿Alguien para ranked?",
+    time: "09:45",
+    unread: 0,
+    onlyAdminsCanSend: false,
+    isJoined: false,
+  },
 ];
 
 const initialMessages: Record<number, Message[]> = {
@@ -105,6 +117,9 @@ const initialMessages: Record<number, Message[]> = {
     { id: 1, sender: "Admin Elite", text: "Atenção: somente administradores podem enviar mensagens neste grupo.", time: "09:00", isMe: false, isAdmin: true },
     { id: 2, sender: "Admin Elite", text: "Quem quiser entrar no ranked, chame no privado.", time: "10:02", isMe: false, isAdmin: true },
   ],
+  5: [
+    { id: 1, sender: "Admin", text: "Bienvenidos a la comunidad!", time: "09:00", isMe: false, isAdmin: true },
+  ],
 };
 
 export default function Home() {
@@ -112,7 +127,9 @@ export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [tempNickname, setTempNickname] = useState("");
 
-  const [activeTab, setActiveTab] = useState<"chats" | "comunidades">("comunidades");
+  // "conversas" ou "comunidades" — telas totalmente separadas
+  const [screen, setScreen] = useState<"conversas" | "comunidades">("conversas");
+
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [groups, setGroups] = useState<Group[]>(initialGroups);
   const [messages, setMessages] = useState<Record<number, Message[]>>(initialMessages);
@@ -128,16 +145,20 @@ export default function Home() {
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) || null;
   const currentMessages = selectedGroupId ? messages[selectedGroupId] || [] : [];
 
-  const filteredGroups = groups.filter((g) => {
-    const matchesSearch =
-      g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      g.description.toLowerCase().includes(searchQuery.toLowerCase());
+  // Grupos que o usuário já entrou (aparecem em Conversas)
+  const myChats = groups.filter(
+    (g) =>
+      g.isJoined &&
+      (g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        g.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
-    if (activeTab === "chats") {
-      return g.isJoined && matchesSearch;
-    }
-    return matchesSearch;
-  });
+  // Todos os grupos (aparecem em Comunidades)
+  const allCommunities = groups.filter(
+    (g) =>
+      g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      g.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -186,7 +207,7 @@ export default function Home() {
       prev.map((g) => (g.id === groupId ? { ...g, isJoined: true, unread: 0 } : g))
     );
     setSelectedGroupId(groupId);
-    setActiveTab("chats");
+    setScreen("conversas"); // Volta para a tela de conversas
   };
 
   const handleLeaveGroup = (groupId: number) => {
@@ -215,9 +236,9 @@ export default function Home() {
     const newGroup: Group = {
       id: newId,
       name: newGroupName.trim(),
-      description: newGroupDesc.trim() || "Grupo criado no Diários FF",
+      description: newGroupDesc.trim() || "Diário criado no Diários FF",
       members: 1,
-      lastMessage: "Grupo criado",
+      lastMessage: "Diário criado",
       time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       unread: 0,
       onlyAdminsCanSend: false,
@@ -232,7 +253,7 @@ export default function Home() {
         {
           id: 1,
           sender: nickname,
-          text: `Grupo "${newGroup.name}" criado por ${nickname}`,
+          text: `Diário "${newGroup.name}" criado por ${nickname}`,
           time: newGroup.time,
           isMe: true,
           isAdmin: true,
@@ -244,12 +265,12 @@ export default function Home() {
     setNewGroupDesc("");
     setShowCreateGroup(false);
     setSelectedGroupId(newId);
-    setActiveTab("chats");
+    setScreen("conversas");
   };
 
-  const showChat = selectedGroupId !== null;
+  const showChat = selectedGroupId !== null && screen === "conversas";
 
-  // Tela de login / nickname
+  // ========== TELA DE LOGIN ==========
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-whatsapp-darker flex items-center justify-center p-4">
@@ -296,9 +317,171 @@ export default function Home() {
     );
   }
 
+  // ========== TELA DE COMUNIDADES FF (totalmente separada) ==========
+  if (screen === "comunidades") {
+    return (
+      <div className="min-h-screen bg-whatsapp-darker flex flex-col">
+        {/* Header */}
+        <div className="bg-whatsapp-light px-4 py-3 flex items-center justify-between shrink-0">
+          <div>
+            <h1 className="text-xl font-semibold text-white">Comunidades FF</h1>
+            <p className="text-xs text-gray-400">Descubra e entre em diários</p>
+          </div>
+          <button
+            onClick={() => setShowCreateGroup(true)}
+            className="bg-whatsapp-green text-white px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 hover:bg-[#00c49a] transition"
+          >
+            <Plus size={16} />
+            Cadastrar diário
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="p-3 bg-whatsapp-dark shrink-0">
+          <div className="flex items-center bg-whatsapp-light rounded-lg px-3 py-2.5 gap-2">
+            <Search size={18} className="text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar diários e comunidades..."
+              className="bg-transparent outline-none text-sm w-full text-white placeholder-gray-400"
+            />
+          </div>
+        </div>
+
+        {/* Lista de comunidades em cards */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 pb-24">
+          {allCommunities.length === 0 ? (
+            <div className="text-center py-16 text-gray-500">
+              <Compass size={48} className="mx-auto mb-3 opacity-40" />
+              <p>Nenhum diário encontrado</p>
+            </div>
+          ) : (
+            allCommunities.map((group) => (
+              <div
+                key={group.id}
+                className="bg-whatsapp-dark rounded-xl p-4 border border-whatsapp-light/30"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-14 h-14 rounded-full bg-whatsapp-green flex items-center justify-center text-white font-bold text-xl shrink-0">
+                    {group.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-white text-base">{group.name}</h3>
+                    <p className="text-sm text-gray-400 mt-1 line-clamp-2">{group.description}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {group.members.toLocaleString("pt-BR")} membros
+                      {group.onlyAdminsCanSend && " • Somente admins"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex gap-2">
+                  {group.isJoined ? (
+                    <button
+                      onClick={() => {
+                        setSelectedGroupId(group.id);
+                        setScreen("conversas");
+                      }}
+                      className="flex-1 bg-whatsapp-light text-white py-2 rounded-lg text-sm font-medium hover:bg-[#2a3942] transition"
+                    >
+                      Abrir conversa
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleJoinGroup(group.id)}
+                      className="flex-1 bg-whatsapp-green text-white py-2 rounded-lg text-sm font-medium hover:bg-[#00c49a] transition"
+                    >
+                      Entrar no diário
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Bottom navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-whatsapp-light border-t border-whatsapp-dark flex shrink-0">
+          <button
+            onClick={() => {
+              setScreen("conversas");
+              setSelectedGroupId(null);
+              setSearchQuery("");
+            }}
+            className="flex-1 py-3 flex flex-col items-center gap-1 text-gray-400 hover:text-white transition"
+          >
+            <MessageCircle size={22} />
+            <span className="text-xs">Conversas</span>
+          </button>
+          <button
+            className="flex-1 py-3 flex flex-col items-center gap-1 text-whatsapp-green"
+          >
+            <Users size={22} />
+            <span className="text-xs font-medium">Comunidades FF</span>
+          </button>
+        </div>
+
+        {/* Modal Criar Diário */}
+        {showCreateGroup && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className="bg-whatsapp-dark rounded-2xl w-full max-w-md overflow-hidden">
+              <div className="bg-whatsapp-light px-4 py-3 flex items-center justify-between">
+                <h2 className="text-lg font-medium text-white">Cadastrar diário</h2>
+                <button
+                  onClick={() => setShowCreateGroup(false)}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X size={22} />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="text-sm text-gray-400 mb-1 block">Nome do diário</label>
+                  <input
+                    type="text"
+                    value={newGroupName}
+                    onChange={(e) => setNewGroupName(e.target.value)}
+                    placeholder="Ex: Meu Clã Free Fire"
+                    maxLength={40}
+                    className="w-full bg-whatsapp-light rounded-lg px-4 py-3 text-white outline-none placeholder-gray-500 focus:ring-2 focus:ring-whatsapp-green"
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-gray-400 mb-1 block">Descrição</label>
+                  <textarea
+                    value={newGroupDesc}
+                    onChange={(e) => setNewGroupDesc(e.target.value)}
+                    placeholder="Sobre o que é esse diário..."
+                    rows={3}
+                    maxLength={200}
+                    className="w-full bg-whatsapp-light rounded-lg px-4 py-3 text-white outline-none placeholder-gray-500 focus:ring-2 focus:ring-whatsapp-green resize-none"
+                  />
+                </div>
+
+                <button
+                  onClick={handleCreateGroup}
+                  disabled={!newGroupName.trim()}
+                  className="w-full bg-whatsapp-green text-white font-medium py-3 rounded-lg hover:bg-[#00c49a] transition disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Cadastrar diário
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ========== TELA DE CONVERSAS (estilo WhatsApp) ==========
   return (
     <div className="flex h-screen bg-whatsapp-darker overflow-hidden">
-      {/* Sidebar */}
+      {/* Sidebar de conversas */}
       <div
         className={`${
           showChat ? "hidden md:flex" : "flex"
@@ -306,45 +489,11 @@ export default function Home() {
       >
         <div className="bg-whatsapp-light px-4 py-3 flex items-center justify-between shrink-0">
           <div>
-            <h1 className="text-xl font-semibold text-white">Diários FF</h1>
+            <h1 className="text-xl font-semibold text-white">Conversas</h1>
             <p className="text-xs text-gray-400">Olá, {nickname}</p>
           </div>
-          <div className="flex gap-3 text-gray-400">
-            <button
-              onClick={() => setShowCreateGroup(true)}
-              className="hover:text-white transition"
-              title="Criar grupo"
-            >
-              <Plus size={22} />
-            </button>
-            <button className="hover:text-white transition" title="Configurações">
-              <Settings size={22} />
-            </button>
-          </div>
-        </div>
-
-        <div className="flex bg-whatsapp-dark border-b border-whatsapp-light shrink-0">
-          <button
-            onClick={() => setActiveTab("chats")}
-            className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition ${
-              activeTab === "chats"
-                ? "text-whatsapp-green border-b-2 border-whatsapp-green"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            <MessageCircle size={18} />
-            Conversas
-          </button>
-          <button
-            onClick={() => setActiveTab("comunidades")}
-            className={`flex-1 py-3 text-sm font-medium flex items-center justify-center gap-2 transition ${
-              activeTab === "comunidades"
-                ? "text-whatsapp-green border-b-2 border-whatsapp-green"
-                : "text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            <Users size={18} />
-            Comunidades FF
+          <button className="text-gray-400 hover:text-white transition" title="Configurações">
+            <Settings size={22} />
           </button>
         </div>
 
@@ -355,46 +504,37 @@ export default function Home() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={
-                activeTab === "chats"
-                  ? "Pesquisar conversas..."
-                  : "Pesquisar grupos ou comunidades..."
-              }
+              placeholder="Pesquisar conversas..."
               className="bg-transparent outline-none text-sm w-full text-white placeholder-gray-400"
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {filteredGroups.length === 0 ? (
+        <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
+          {myChats.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              <Users size={40} className="mx-auto mb-3 opacity-40" />
-              <p className="text-sm">
-                {activeTab === "chats"
-                  ? "Você ainda não entrou em nenhum grupo."
-                  : "Nenhum grupo encontrado."}
-              </p>
-              {activeTab === "chats" && (
-                <button
-                  onClick={() => setActiveTab("comunidades")}
-                  className="mt-3 text-whatsapp-green text-sm hover:underline"
-                >
-                  Explorar Comunidades FF
-                </button>
-              )}
+              <MessageCircle size={40} className="mx-auto mb-3 opacity-40" />
+              <p className="text-sm">Você ainda não tem conversas.</p>
+              <button
+                onClick={() => {
+                  setScreen("comunidades");
+                  setSearchQuery("");
+                }}
+                className="mt-3 text-whatsapp-green text-sm hover:underline"
+              >
+                Explorar Comunidades FF
+              </button>
             </div>
           ) : (
-            filteredGroups.map((group) => (
+            myChats.map((group) => (
               <div
                 key={group.id}
                 className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-whatsapp-light transition cursor-pointer ${
                   selectedGroupId === group.id ? "bg-whatsapp-light" : ""
                 }`}
                 onClick={() => {
-                  if (group.isJoined) {
-                    setSelectedGroupId(group.id);
-                    setShowGroupInfo(false);
-                  }
+                  setSelectedGroupId(group.id);
+                  setShowGroupInfo(false);
                 }}
               >
                 <div className="w-12 h-12 rounded-full bg-whatsapp-green flex items-center justify-center text-white font-bold text-lg shrink-0">
@@ -412,27 +552,35 @@ export default function Home() {
                   </div>
                   <div className="flex justify-between items-center mt-0.5">
                     <p className="text-sm text-gray-400 truncate">{group.lastMessage}</p>
-                    {group.unread > 0 && group.isJoined && (
+                    {group.unread > 0 && (
                       <span className="bg-whatsapp-green text-white text-xs rounded-full px-1.5 min-w-[20px] text-center shrink-0 ml-2">
                         {group.unread}
                       </span>
                     )}
                   </div>
-                  {!group.isJoined && activeTab === "comunidades" && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleJoinGroup(group.id);
-                      }}
-                      className="mt-2 text-xs bg-whatsapp-green text-white px-3 py-1 rounded-full hover:bg-[#00c49a] transition"
-                    >
-                      Entrar no grupo
-                    </button>
-                  )}
                 </div>
               </div>
             ))
           )}
+        </div>
+
+        {/* Bottom navigation (mobile) */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-whatsapp-light border-t border-whatsapp-dark flex">
+          <button className="flex-1 py-3 flex flex-col items-center gap-1 text-whatsapp-green">
+            <MessageCircle size={22} />
+            <span className="text-xs font-medium">Conversas</span>
+          </button>
+          <button
+            onClick={() => {
+              setScreen("comunidades");
+              setSelectedGroupId(null);
+              setSearchQuery("");
+            }}
+            className="flex-1 py-3 flex flex-col items-center gap-1 text-gray-400 hover:text-white transition"
+          >
+            <Users size={22} />
+            <span className="text-xs">Comunidades FF</span>
+          </button>
         </div>
       </div>
 
@@ -575,44 +723,42 @@ export default function Home() {
                     <p className="text-sm text-gray-200">{selectedGroup.description}</p>
                   </div>
 
-                  {(selectedGroup.createdByMe || true) && (
-                    <div className="mt-2 bg-whatsapp-dark">
-                      <button
-                        onClick={toggleOnlyAdmins}
-                        className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-whatsapp-light transition"
+                  <div className="mt-2 bg-whatsapp-dark">
+                    <button
+                      onClick={toggleOnlyAdmins}
+                      className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-whatsapp-light transition"
+                    >
+                      <Shield size={22} className="text-gray-400" />
+                      <div className="flex-1 text-left">
+                        <p className="text-sm text-white">Somente admins podem enviar mensagens</p>
+                        <p className="text-xs text-gray-400">
+                          {selectedGroup.onlyAdminsCanSend ? "Ativado" : "Desativado"}
+                        </p>
+                      </div>
+                      <div
+                        className={`w-10 h-6 rounded-full transition relative ${
+                          selectedGroup.onlyAdminsCanSend ? "bg-whatsapp-green" : "bg-gray-600"
+                        }`}
                       >
-                        <Shield size={22} className="text-gray-400" />
-                        <div className="flex-1 text-left">
-                          <p className="text-sm text-white">Somente admins podem enviar mensagens</p>
-                          <p className="text-xs text-gray-400">
-                            {selectedGroup.onlyAdminsCanSend ? "Ativado" : "Desativado"}
-                          </p>
-                        </div>
                         <div
-                          className={`w-10 h-6 rounded-full transition relative ${
-                            selectedGroup.onlyAdminsCanSend ? "bg-whatsapp-green" : "bg-gray-600"
-                          }`}
-                        >
-                          <div
-                            className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all"
-                            style={{
-                              left: selectedGroup.onlyAdminsCanSend ? "18px" : "2px",
-                            }}
-                          />
-                        </div>
-                      </button>
+                          className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all"
+                          style={{
+                            left: selectedGroup.onlyAdminsCanSend ? "18px" : "2px",
+                          }}
+                        />
+                      </div>
+                    </button>
 
-                      <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-whatsapp-light transition">
-                        <UserPlus size={22} className="text-gray-400" />
-                        <span className="text-sm text-white">Adicionar participantes</span>
-                      </button>
+                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-whatsapp-light transition">
+                      <UserPlus size={22} className="text-gray-400" />
+                      <span className="text-sm text-white">Adicionar participantes</span>
+                    </button>
 
-                      <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-whatsapp-light transition">
-                        <Info size={22} className="text-gray-400" />
-                        <span className="text-sm text-white">Ver participantes</span>
-                      </button>
-                    </div>
-                  )}
+                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-whatsapp-light transition">
+                      <Info size={22} className="text-gray-400" />
+                      <span className="text-sm text-white">Ver participantes</span>
+                    </button>
+                  </div>
 
                   <div className="mt-2 bg-whatsapp-dark">
                     <button
@@ -633,64 +779,12 @@ export default function Home() {
               <MessageCircle size={72} className="mx-auto mb-4 opacity-20" />
               <p className="text-xl font-light text-gray-400">Diários FF</p>
               <p className="text-sm mt-2 text-gray-500 max-w-sm">
-                Olá, {nickname}! Selecione um grupo ou explore as Comunidades FF
+                Olá, {nickname}! Selecione uma conversa ou vá em Comunidades FF
               </p>
             </div>
           </div>
         )}
       </div>
-
-      {/* Modal Criar Grupo */}
-      {showCreateGroup && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="bg-whatsapp-dark rounded-2xl w-full max-w-md overflow-hidden">
-            <div className="bg-whatsapp-light px-4 py-3 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-white">Novo grupo</h2>
-              <button
-                onClick={() => setShowCreateGroup(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X size={22} />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4">
-              <div>
-                <label className="text-sm text-gray-400 mb-1 block">Nome do grupo</label>
-                <input
-                  type="text"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  placeholder="Ex: Meu Clã FF"
-                  maxLength={40}
-                  className="w-full bg-whatsapp-light rounded-lg px-4 py-3 text-white outline-none placeholder-gray-500 focus:ring-2 focus:ring-whatsapp-green"
-                  autoFocus
-                />
-              </div>
-
-              <div>
-                <label className="text-sm text-gray-400 mb-1 block">Descrição (opcional)</label>
-                <textarea
-                  value={newGroupDesc}
-                  onChange={(e) => setNewGroupDesc(e.target.value)}
-                  placeholder="Sobre o que é esse grupo..."
-                  rows={3}
-                  maxLength={200}
-                  className="w-full bg-whatsapp-light rounded-lg px-4 py-3 text-white outline-none placeholder-gray-500 focus:ring-2 focus:ring-whatsapp-green resize-none"
-                />
-              </div>
-
-              <button
-                onClick={handleCreateGroup}
-                disabled={!newGroupName.trim()}
-                className="w-full bg-whatsapp-green text-white font-medium py-3 rounded-lg hover:bg-[#00c49a] transition disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Criar grupo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
