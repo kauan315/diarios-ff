@@ -59,6 +59,10 @@ export default function Home() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
+  const [showFabMenu, setShowFabMenu] = useState(false);
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [createKind, setCreateKind] = useState<"grupo" | "comunidade">("grupo");
   const [searchQuery, setSearchQuery] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
@@ -141,11 +145,11 @@ export default function Home() {
     const newId = Date.now();
     const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const newGroup: Group = {
-      id: newId, name: newGroupName.trim(), description: newGroupDesc.trim() || "Diário criado no Diários FF",
+      id: newId, name: newGroupName.trim(), description: newGroupDesc.trim() || (createKind === "comunidade" ? "Comunidade criada no Diários FF" : "Grupo criado no Diários FF"),
       members: 1, lastMessage: "Diário criado", time, unread: 0, onlyAdminsCanSend: false, isJoined: true, createdByMe: true,
     };
     setGroups((prev) => [newGroup, ...prev]);
-    setMessages((prev) => ({ ...prev, [newId]: [{ id: 1, sender: nickname, text: `Diário "${newGroup.name}" criado por ${nickname}`, time, isMe: true, isAdmin: true }] }));
+    setMessages((prev) => ({ ...prev, [newId]: [{ id: 1, sender: nickname, text: `${createKind === "comunidade" ? "Comunidade" : "Grupo"} "${newGroup.name}" criado por ${nickname}`, time, isMe: true, isAdmin: true }] }));
     setNewGroupName(""); setNewGroupDesc(""); setShowCreateGroup(false);
     setSelectedGroupId(newId); setScreen("conversas");
   };
@@ -188,7 +192,7 @@ export default function Home() {
             <h1 className="text-lg font-medium text-wa-text">Comunidades FF</h1>
             <p className="text-xs text-wa-secondary">Descubra e entre em diários</p>
           </div>
-          <button onClick={() => setShowCreateGroup(true)}
+          <button onClick={() => { setCreateKind("comunidade"); setShowCreateGroup(true); }}
             className="bg-wa-green text-white px-3.5 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 hover:bg-wa-green-dark">
             <Plus size={16} /> Cadastrar
           </button>
@@ -239,24 +243,24 @@ export default function Home() {
           <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center">
             <div className="bg-wa-panel w-full sm:max-w-md sm:rounded-xl overflow-hidden">
               <div className="bg-wa-header px-4 py-3 flex items-center justify-between">
-                <h2 className="text-base font-medium text-wa-text">Cadastrar diário</h2>
+                <h2 className="text-base font-medium text-wa-text">{createKind === "comunidade" ? "Criar nova comunidade" : "Criar novo grupo"}</h2>
                 <button onClick={() => setShowCreateGroup(false)} className="text-wa-secondary"><X size={22} /></button>
               </div>
               <div className="p-4 space-y-4">
                 <div>
                   <label className="text-xs text-wa-secondary mb-1.5 block">Nome do diário</label>
                   <input type="text" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)}
-                    placeholder="Ex: Meu Clã Free Fire" maxLength={40}
+                    placeholder={createKind === "comunidade" ? "Ex: Comunidade Free Fire" : "Ex: Grupo de ranked"} maxLength={40}
                     className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none placeholder-wa-muted" autoFocus />
                 </div>
                 <div>
                   <label className="text-xs text-wa-secondary mb-1.5 block">Descrição</label>
                   <textarea value={newGroupDesc} onChange={(e) => setNewGroupDesc(e.target.value)}
-                    placeholder="Sobre o que é esse diário..." rows={3} maxLength={200}
+                    placeholder={createKind === "comunidade" ? "Sobre o que é essa comunidade..." : "Sobre o que é esse grupo..."} rows={3} maxLength={200}
                     className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none placeholder-wa-muted resize-none" />
                 </div>
                 <button onClick={handleCreateGroup} disabled={!newGroupName.trim()}
-                  className="w-full bg-wa-green text-white font-medium py-3 rounded-lg disabled:opacity-40">Cadastrar diário</button>
+                  className="w-full bg-wa-green text-white font-medium py-3 rounded-lg disabled:opacity-40">{createKind === "comunidade" ? "Criar comunidade" : "Criar grupo"}</button>
               </div>
             </div>
           </div>
@@ -361,12 +365,32 @@ export default function Home() {
           </button>
         </div>
 
-        <button
-          onClick={() => { setScreen("comunidades"); setSearchQuery(""); }}
-          className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-wa-green rounded-2xl shadow-lg flex items-center justify-center text-white z-10"
-        >
-          <MessageCirclePlus size={26} />
-        </button>
+        <div className="md:hidden fixed bottom-20 right-4 z-20 flex flex-col items-end gap-2">
+          {showFabMenu && (
+            <div className="mb-1 w-56 rounded-xl border border-wa-border bg-wa-panel py-2 shadow-xl">
+              <button onClick={() => { setCreateKind("grupo"); setShowCreateGroup(true); setShowFabMenu(false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-wa-text hover:bg-wa-hover">
+                <MessageCirclePlus size={19} className="text-wa-green" /> Criar novo grupo
+              </button>
+              <button onClick={() => { setCreateKind("comunidade"); setScreen("comunidades"); setSelectedGroupId(null); setShowCreateGroup(true); setShowFabMenu(false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-wa-text hover:bg-wa-hover">
+                <Users size={19} className="text-wa-green" /> Criar nova comunidade
+              </button>
+              <button onClick={() => { setShowUserSearch(true); setUserSearchQuery(""); setShowFabMenu(false); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-wa-text hover:bg-wa-hover">
+                <Search size={19} className="text-wa-green" /> Buscar usuários
+              </button>
+            </div>
+          )}
+          <button
+            onClick={() => setShowFabMenu((open) => !open)}
+            aria-label="Criar grupo, comunidade ou buscar usuários"
+            aria-expanded={showFabMenu}
+            className="w-14 h-14 bg-wa-green rounded-2xl shadow-lg flex items-center justify-center text-white"
+          >
+            {showFabMenu ? <X size={26} /> : <Plus size={28} />}
+          </button>
+        </div>
       </div>
 
       <div className={`${showChat ? "flex" : "hidden md:flex"} flex-1 flex-col relative bg-wa-bg`}>
@@ -478,6 +502,41 @@ export default function Home() {
         )}
       </div>
 
+      {showUserSearch && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-wa-panel w-full max-w-md rounded-xl overflow-hidden shadow-xl">
+            <div className="bg-wa-header px-4 py-3 flex items-center justify-between">
+              <h2 className="text-base font-medium text-wa-text">Buscar usuários</h2>
+              <button onClick={() => setShowUserSearch(false)} className="text-wa-secondary"><X size={22} /></button>
+            </div>
+            <div className="p-4">
+              <div className="flex items-center gap-2 bg-wa-input rounded-lg px-3 py-2.5">
+                <Search size={18} className="text-wa-secondary" />
+                <input value={userSearchQuery} onChange={(e) => setUserSearchQuery(e.target.value)}
+                  placeholder="Digite o nickname..." className="bg-transparent outline-none text-sm w-full text-wa-text placeholder-wa-muted" autoFocus />
+              </div>
+              <div className="mt-3 max-h-64 overflow-y-auto">
+                {Array.from(new Map(Object.entries(messages).flatMap(([groupId, list]) => list
+                  .filter((msg) => msg.sender && msg.sender !== nickname && msg.sender.toLowerCase().includes(userSearchQuery.trim().toLowerCase()))
+                  .map((msg) => [msg.sender, { sender: msg.sender, groupName: groups.find((g) => g.id === Number(groupId))?.name || "Grupo" }])).values())
+                  .map((user) => (
+                    <div key={user.sender} className="flex items-center gap-3 py-3 border-b border-wa-border last:border-0">
+                      <div className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold">{user.sender.charAt(0).toUpperCase()}</div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-wa-text">{user.sender}</p>
+                        <p className="text-xs text-wa-secondary">Encontrado em {user.groupName}</p>
+                      </div>
+                    </div>
+                  ))}
+                {userSearchQuery.trim() && !Object.values(messages).flat().some((msg) => msg.sender && msg.sender !== nickname && msg.sender.toLowerCase().includes(userSearchQuery.trim().toLowerCase())) && (
+                  <p className="text-sm text-wa-secondary text-center py-6">Nenhum usuário encontrado.</p>
+                )}
+                {!userSearchQuery.trim() && <p className="text-xs text-wa-secondary text-center py-4">Pesquise pelo nickname de alguém que já apareceu nas conversas.</p>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {showSettings && (
         <ProfileScreen
           nickname={nickname}
