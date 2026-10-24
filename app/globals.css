@@ -16,6 +16,41 @@
   --rk-green-dark: #20b873;
 }
 
+
+/* Themes selected in Profile > Appearance. */
+:root[data-mode="dark"][data-theme="green"] {
+  color-scheme: dark;
+  --rk-bg: #090d0c; --rk-panel: #111816; --rk-header: #17211d; --rk-input: #202b26;
+  --rk-border: #28372f; --rk-text: #edf5ef; --rk-secondary: #9aada1; --rk-muted: #718379;
+  --rk-green: #39d98a; --rk-green-dark: #20b873;
+}
+:root[data-mode="light"] {
+  color-scheme: light;
+  --rk-bg: #f7f8f9; --rk-panel: #ffffff; --rk-header: #f1f3f5; --rk-input: #f0f2f4;
+  --rk-border: #e1e5e8; --rk-text: #18211d; --rk-secondary: #59655f; --rk-muted: #7c8781;
+}
+:root[data-mode="light"][data-theme="green"] { --rk-green: #20b873; --rk-green-dark: #168c58; }
+:root[data-mode="light"][data-theme="pink"] { --rk-green: #ef9fc4; --rk-green-dark: #d979a4; --rk-header: #fff4f8; --rk-input: #fff5f9; --rk-border: #f0dce5; }
+:root[data-mode="light"][data-theme="blue"] { --rk-green: #86bfff; --rk-green-dark: #5799e8; --rk-header: #f2f8ff; --rk-input: #f3f8ff; --rk-border: #dce9f7; }
+:root[data-mode="light"][data-theme="red"] { --rk-green: #ef999f; --rk-green-dark: #d96b73; --rk-header: #fff5f5; --rk-input: #fff5f5; --rk-border: #f1dddd; }
+:root[data-mode="dark"][data-theme="pink"] {
+  color-scheme: dark; --rk-bg: #090609; --rk-panel: #130b10; --rk-header: #1d1018; --rk-input: #24131d;
+  --rk-border: #3b2030; --rk-text: #f7edf2; --rk-secondary: #c2a5b4; --rk-muted: #927486; --rk-green: #d94f8a; --rk-green-dark: #b8326b;
+}
+:root[data-mode="dark"][data-theme="blue"] {
+  color-scheme: dark; --rk-bg: #060a11; --rk-panel: #0c121d; --rk-header: #111d2e; --rk-input: #172235;
+  --rk-border: #263852; --rk-text: #edf4ff; --rk-secondary: #a4b7d0; --rk-muted: #7287a3; --rk-green: #4389e8; --rk-green-dark: #286bc4;
+}
+:root[data-mode="dark"][data-theme="red"] {
+  color-scheme: dark; --rk-bg: #100607; --rk-panel: #190b0d; --rk-header: #251114; --rk-input: #2b1518;
+  --rk-border: #482328; --rk-text: #fff0f0; --rk-secondary: #d0a6a8; --rk-muted: #9d777a; --rk-green: #e04b55; --rk-green-dark: #b92d38;
+}
+:root[data-mode="light"] .chat-bg { background-color: #f7f8f9; }
+:root[data-mode="dark"][data-theme="pink"] .chat-bg { background-color: #100910; }
+:root[data-mode="dark"][data-theme="blue"] .chat-bg { background-color: #080e18; }
+:root[data-mode="dark"][data-theme="red"] .chat-bg { background-color: #120809; }
+:root[data-mode="light"] input, :root[data-mode="light"] textarea { color-scheme: light; }
+
 * { box-sizing: border-box; }
 
 html, body {
