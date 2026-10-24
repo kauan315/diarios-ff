@@ -56,6 +56,7 @@ export default function Home() {
   const [showGroupInfo, setShowGroupInfo] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showQuickMenu, setShowQuickMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
@@ -265,7 +266,34 @@ export default function Home() {
             <h1 className="text-[22px] font-semibold text-wa-green">Diários FF</h1>
             <div className="flex items-center gap-5 text-wa-secondary">
               <button className="hover:text-wa-text" title="Câmera"><Camera size={22} /></button>
-              <button onClick={() => setShowSettings(true)} className="hover:text-wa-text" title="Mais opções"><MoreVertical size={22} /></button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowQuickMenu((open) => !open)}
+                  className="hover:text-wa-text"
+                  title="Mais opções"
+                  aria-label="Abrir menu"
+                  aria-expanded={showQuickMenu}
+                >
+                  <MoreVertical size={22} />
+                </button>
+                {showQuickMenu && (
+                  <>
+                    <button
+                      aria-label="Fechar menu"
+                      className="fixed inset-0 z-40 cursor-default"
+                      onClick={() => setShowQuickMenu(false)}
+                    />
+                    <div className="absolute right-0 top-8 z-50 w-56 rounded-lg border border-wa-border bg-wa-panel py-1 shadow-xl">
+                      <button
+                        onClick={() => { setShowQuickMenu(false); setShowSettings(true); }}
+                        className="w-full px-4 py-3 text-left text-sm text-wa-text hover:bg-wa-hover"
+                      >
+                        Perfil e configurações
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center bg-wa-input rounded-full px-4 py-2.5 gap-3 mb-1">
