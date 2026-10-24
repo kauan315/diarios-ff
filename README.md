@@ -1,37 +1,49 @@
 # Diários FF
 
-Plataforma de conversas estilo WhatsApp focada em **grupos e comunidades de Free Fire**.
+Chat estilo WhatsApp focado em grupos e comunidades de Free Fire.
 
-## O que é
+## Como rodar o projeto (passo a passo)
 
-Um app de chat completo (mobile + PC) onde:
+### 1. Clone o repositório
+```bash
+git clone https://github.com/kauan315/diarios-ff.git
+cd diarios-ff
+```
 
-- Qualquer pessoa pode descobrir e entrar em grupos/comunidades de Free Fire ("diários")
-- Os grupos funcionam igual ao WhatsApp (com controle de admin, "somente admins podem enviar mensagens", etc.)
-- Existe uma área exclusiva para **donos de organizações**
+### 2. Instale as dependências
+```bash
+npm install
+```
 
-## Funcionalidades planejadas
+### 3. Rode o projeto
+```bash
+npm run dev
+```
 
-### Parte Pública
-- Lista de grupos e comunidades de Free Fire
-- Busca e entrada em grupos
-- Chat de grupo estilo WhatsApp
+### 4. Abra no navegador
+Acesse: [http://localhost:3000](http://localhost:3000)
 
-### Grupos (igual WhatsApp)
-- Mensagens de texto, áudio, foto, vídeo
-- Admins e membros
-- Opção "somente administradores podem enviar mensagens"
-- Descrição e foto do grupo
+---
 
-### Área de Donos de Organizações
-- Acesso exclusivo
-- Gerenciamento avançado de grupos
+## O que tem no app
 
-## Stack (inicial)
-- Next.js 15 (App Router)
-- Tailwind CSS
-- TypeScript
-- Supabase (auth + realtime + database) — a definir
+- Tela de entrada com nickname
+- **Conversas** → chat estilo WhatsApp
+- **Comunidades FF** → tela separada para descobrir e cadastrar diários
+- Criar grupos / diários
+- Entrar e sair de grupos
+- Controle "somente admins podem enviar mensagens"
+- Funciona no celular e no computador
 
-## Status
-🚧 Em desenvolvimento
+## Deploy no Render (Web Service)
+
+1. Crie um **Web Service** (não Static Site)
+2. Conecte o repositório `kauan315/diarios-ff`
+3. Configure:
+   - **Build Command:** `npm install && npm run build`
+   - **Start Command:** `npm start`
+4. Clique em Deploy
+
+---
+
+Feito com Next.js + Tailwind CSS
