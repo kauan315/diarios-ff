@@ -354,6 +354,21 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
             </div>
           </div>
           <div className="flex-1 overflow-y-auto px-4 py-4">
+            <h3 className="font-semibold text-wa-text mb-2">Modo de aparência</h3>
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              <button
+                onClick={() => setThemeMode("light")}
+                className={`rounded-xl border px-3 py-2.5 flex items-center justify-center gap-2 text-sm font-medium transition ${themeMode === "light" ? "border-sky-500 bg-sky-50 text-sky-700 ring-2 ring-sky-500/20" : "border-wa-border bg-wa-panel text-wa-secondary"}`}
+              >
+                <span className="w-4 h-4 rounded-full border border-slate-300 bg-white" /> Claro
+              </button>
+              <button
+                onClick={() => setThemeMode("dark")}
+                className={`rounded-xl border px-3 py-2.5 flex items-center justify-center gap-2 text-sm font-medium transition ${themeMode === "dark" ? "border-sky-500 bg-slate-800 text-white ring-2 ring-sky-500/20" : "border-wa-border bg-wa-panel text-wa-secondary"}`}
+              >
+                <span className="w-4 h-4 rounded-full border border-slate-500 bg-slate-900" /> Escuro
+              </button>
+            </div>
             <h3 className="font-semibold text-wa-text mb-1">Temas grátis</h3>
             <p className="text-xs text-wa-secondary mb-3">Mude a cor das bolhas sem alterar o visual normal do chat.</p>
             <div className="grid grid-cols-2 gap-3">
@@ -363,11 +378,11 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
                 { id: "sky-blue", name: "Azul Céu", color: "#c9e3ff", accent: "blue" },
                 { id: "ruby-red", name: "Ruby", color: "#ffd0d2", accent: "red" },
               ].map((theme) => (
-                <button key={theme.id} onClick={() => { setThemePreset(theme.id); setThemeColor(theme.accent); setThemeMode("dark"); }} className={`rounded-2xl border p-3 text-left transition ${themePreset === theme.id ? "border-wa-green ring-2 ring-wa-green/30" : "border-wa-border"} bg-wa-panel`}>
-                  <div className="rounded-xl bg-[#202c33] p-2.5 space-y-2 mb-2">
-                    <div className="h-5 w-3/4 rounded-xl bg-white" />
-                    <div className="ml-auto h-6 w-4/5 rounded-xl" style={{ backgroundColor: theme.color }} />
-                    <div className="h-5 w-1/2 rounded-xl bg-white" />
+                <button key={theme.id} onClick={() => { setThemePreset(theme.id); setThemeColor(theme.accent); }} className={`rounded-2xl border p-3 text-left transition ${themePreset === theme.id ? "border-wa-green ring-2 ring-wa-green/30" : "border-wa-border"} bg-wa-panel`}>
+                  <div className={`rounded-xl p-2.5 space-y-2 mb-2 ${themeMode === "dark" ? "bg-[#101820]" : "bg-[#f3f9ff] border border-slate-200"}`}>
+                    <div className={`h-5 w-3/4 rounded-xl ${themeMode === "dark" ? "bg-[#263746]" : "bg-white border border-slate-200"}`} />
+                    <div className="ml-auto h-6 w-4/5 rounded-xl" style={{ backgroundColor: themeMode === "dark" ? (theme.accent === "blue" ? "#174a78" : theme.accent === "pink" ? "#6b2947" : theme.accent === "red" ? "#70272c" : "#24513c") : theme.color }} />
+                    <div className={`h-5 w-1/2 rounded-xl ${themeMode === "dark" ? "bg-[#263746]" : "bg-white border border-slate-200"}`} />
                   </div>
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-sm font-medium text-wa-text">{theme.name}</span>
