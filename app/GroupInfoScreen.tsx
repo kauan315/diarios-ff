@@ -28,6 +28,7 @@ type Props = {
   onClose: () => void;
   onLeave: () => void;
   onClearConversation: () => void;
+  onDeleteGroup: () => void;
   canManage: boolean;
   onToggleOnlyAdmins: () => void;
   onToggleAdminApproval: () => void;
@@ -52,6 +53,7 @@ export default function GroupInfoScreen({
   onClose,
   onLeave,
   onClearConversation,
+  onDeleteGroup,
   canManage,
   onToggleOnlyAdmins,
   onToggleAdminApproval,
@@ -333,6 +335,15 @@ export default function GroupInfoScreen({
               <Trash2 size={22} />
               <p className="text-[15px]">Limpar conversa</p>
             </button>
+            {group.createdByMe && (
+              <button onClick={onDeleteGroup} className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-red-50 text-left text-red-600">
+                <Trash2 size={22} />
+                <div>
+                  <p className="text-[15px] font-medium">Apagar grupo definitivamente</p>
+                  <p className="text-xs text-wa-secondary mt-0.5">Remove o grupo e as mensagens deste aparelho</p>
+                </div>
+              </button>
+            )}
             <button
               onClick={onLeave}
               className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left text-wa-danger"
