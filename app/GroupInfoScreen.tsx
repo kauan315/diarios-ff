@@ -32,7 +32,6 @@ type Props = {
   onToggleOnlyAdmins: () => void;
   onToggleAdminApproval: () => void;
   onToggleOnlyAdminsCanEdit: () => void;
-  onPromoteAllMembers: () => void;
   onToggleFavorite: () => void;
 };
 
@@ -57,7 +56,6 @@ export default function GroupInfoScreen({
   onToggleOnlyAdmins,
   onToggleAdminApproval,
   onToggleOnlyAdminsCanEdit,
-  onPromoteAllMembers,
   onToggleFavorite,
 }: Props) {
   const [tab, setTab] = useState<"membros" | "midias" | "config" | "permissoes">("membros");
