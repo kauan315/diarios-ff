@@ -98,6 +98,15 @@ export default function Home() {
     g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const userMatches = Object.entries(messages)
+    .flatMap(([groupId, list]) => list
+      .filter((msg) => msg.sender && msg.sender !== nickname && msg.sender.toLowerCase().includes(userSearchQuery.trim().toLowerCase()))
+      .map((msg) => ({
+        sender: msg.sender,
+        groupName: groups.find((g) => g.id === Number(groupId))?.name || "Grupo",
+      })))
+    .filter((user, index, users) => users.findIndex((item) => item.sender === user.sender) === index);
+
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [currentMessages]);
 
   const handleLogin = () => {
@@ -368,7 +377,7 @@ export default function Home() {
         <div className="md:hidden fixed bottom-20 right-4 z-20 flex flex-col items-end gap-2">
           {showFabMenu && (
             <div className="mb-1 w-56 rounded-xl border border-wa-border bg-wa-panel py-2 shadow-xl">
-              <button onClick={() => { setCreateKind("grupo"); setShowCreateGroup(true); setShowFabMenu(false); }}
+              <button onClick={() => { setCreateKind("grupo"); setScreen("comunidades"); setSelectedGroupId(null); setShowCreateGroup(true); setShowFabMenu(false); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-wa-text hover:bg-wa-hover">
                 <MessageCirclePlus size={19} className="text-wa-green" /> Criar novo grupo
               </button>
@@ -516,19 +525,16 @@ export default function Home() {
                   placeholder="Digite o nickname..." className="bg-transparent outline-none text-sm w-full text-wa-text placeholder-wa-muted" autoFocus />
               </div>
               <div className="mt-3 max-h-64 overflow-y-auto">
-                {Array.from(new Map(Object.entries(messages).flatMap(([groupId, list]) => list
-                  .filter((msg) => msg.sender && msg.sender !== nickname && msg.sender.toLowerCase().includes(userSearchQuery.trim().toLowerCase()))
-                  .map((msg) => [msg.sender, { sender: msg.sender, groupName: groups.find((g) => g.id === Number(groupId))?.name || "Grupo" }])).values())
-                  .map((user) => (
-                    <div key={user.sender} className="flex items-center gap-3 py-3 border-b border-wa-border last:border-0">
-                      <div className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold">{user.sender.charAt(0).toUpperCase()}</div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-wa-text">{user.sender}</p>
-                        <p className="text-xs text-wa-secondary">Encontrado em {user.groupName}</p>
-                      </div>
+                {userMatches.map((user) => (
+                  <div key={user.sender} className="flex items-center gap-3 py-3 border-b border-wa-border last:border-0">
+                    <div className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold">{user.sender.charAt(0).toUpperCase()}</div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-wa-text">{user.sender}</p>
+                      <p className="text-xs text-wa-secondary">Encontrado em {user.groupName}</p>
                     </div>
-                  ))}
-                {userSearchQuery.trim() && !Object.values(messages).flat().some((msg) => msg.sender && msg.sender !== nickname && msg.sender.toLowerCase().includes(userSearchQuery.trim().toLowerCase())) && (
+                  </div>
+                ))}
+                {userSearchQuery.trim() && userMatches.length === 0 && (
                   <p className="text-sm text-wa-secondary text-center py-6">Nenhum usuário encontrado.</p>
                 )}
                 {!userSearchQuery.trim() && <p className="text-xs text-wa-secondary text-center py-4">Pesquise pelo nickname de alguém que já apareceu nas conversas.</p>}
