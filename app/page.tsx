@@ -275,7 +275,26 @@ export default function Home() {
                       if (!file) return;
                       if (file.size > 3 * 1024 * 1024) { alert("Escolha uma imagem de até 3 MB."); e.currentTarget.value = ""; return; }
                       const reader = new FileReader();
-                      reader.onload = () => { if (typeof reader.result === "string") setNewGroupPhoto(reader.result); };
+                      reader.onerror = () => alert("Não foi possível abrir essa imagem. Tente outra foto.");
+                      reader.onload = () => {
+                        if (typeof reader.result !== "string") return;
+                        const image = new window.Image();
+                        image.onerror = () => alert("Essa imagem não pôde ser carregada. Tente outra.");
+                        image.onload = () => {
+                          const canvas = document.createElement("canvas");
+                          const maxSide = 480;
+                          const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+                          canvas.width = Math.max(1, Math.round(image.width * scale));
+                          canvas.height = Math.max(1, Math.round(image.height * scale));
+                          const context = canvas.getContext("2d");
+                          if (!context) { alert("Não foi possível preparar a imagem."); return; }
+                          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                          const compressedPhoto = canvas.toDataURL("image/jpeg", 0.78);
+                          if (compressedPhoto.length > 450000) { alert("Essa foto ficou muito grande. Escolha outra imagem."); return; }
+                          setNewGroupPhoto(compressedPhoto);
+                        };
+                        image.src = reader.result;
+                      };
                       reader.readAsDataURL(file);
                     }} />
                   </label>
