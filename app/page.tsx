@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Search, MessageCircle, Users, Settings, Plus, ArrowLeft, MoreVertical,
   Send, Smile, Paperclip, Info, Shield, UserPlus, LogOut, X, Compass, Bot, Palette,
-  Camera, MessageCirclePlus, Pin, Mic,
+  Camera, MessageCirclePlus, Pin, Mic, ImagePlus, Check, Lock, Globe,
 } from "lucide-react";
 import ProfileScreen from "./ProfileScreen";
 import GroupInfoScreen from "./GroupInfoScreen";
@@ -14,6 +14,7 @@ type Group = {
   id: number; name: string; description: string; members: number;
   lastMessage: string; time: string; unread: number;
   onlyAdminsCanSend: boolean; isJoined: boolean; createdByMe?: boolean;
+  photo?: string; memberNames?: string[]; isCommunity?: boolean;
 };
 
 const DEFAULT_GROUPS: Group[] = [
@@ -66,6 +67,10 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
+  const [newGroupPhoto, setNewGroupPhoto] = useState("");
+  const [selectedNewMembers, setSelectedNewMembers] = useState<string[]>([]);
+  const [newGroupOnlyAdmins, setNewGroupOnlyAdmins] = useState(false);
+  const [newGroupPrivacy, setNewGroupPrivacy] = useState<"publico" | "privado">("publico");
   const [hydrated, setHydrated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -97,6 +102,8 @@ export default function Home() {
   const allCommunities = groups.filter((g) =>
     g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const availableMembers = Array.from(new Set(Object.values(messages).flatMap((list) => list.map((msg) => msg.sender).filter((sender) => sender && sender !== nickname))));
 
   const userMatches = Object.entries(messages)
     .flatMap(([groupId, list]) => list
@@ -155,11 +162,12 @@ export default function Home() {
     const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const newGroup: Group = {
       id: newId, name: newGroupName.trim(), description: newGroupDesc.trim() || (createKind === "comunidade" ? "Comunidade criada no Diários FF" : "Grupo criado no Diários FF"),
-      members: 1, lastMessage: "Diário criado", time, unread: 0, onlyAdminsCanSend: false, isJoined: true, createdByMe: true,
+      members: 1 + selectedNewMembers.length, lastMessage: createKind === "comunidade" ? "Comunidade criada" : "Grupo criado", time, unread: 0, onlyAdminsCanSend: newGroupOnlyAdmins, isJoined: true, createdByMe: true,
+      photo: newGroupPhoto, memberNames: [nickname, ...selectedNewMembers], isCommunity: createKind === "comunidade",
     };
     setGroups((prev) => [newGroup, ...prev]);
     setMessages((prev) => ({ ...prev, [newId]: [{ id: 1, sender: nickname, text: `${createKind === "comunidade" ? "Comunidade" : "Grupo"} "${newGroup.name}" criado por ${nickname}`, time, isMe: true, isAdmin: true }] }));
-    setNewGroupName(""); setNewGroupDesc(""); setShowCreateGroup(false);
+    setNewGroupName(""); setNewGroupDesc(""); setNewGroupPhoto(""); setSelectedNewMembers([]); setNewGroupOnlyAdmins(false); setNewGroupPrivacy("publico"); setShowCreateGroup(false);
     setSelectedGroupId(newId); setScreen("conversas");
   };
 
@@ -217,7 +225,7 @@ export default function Home() {
           {allCommunities.map((group) => (
             <div key={group.id} className="bg-wa-panel rounded-xl p-4 shadow-sm">
               <div className="flex items-start gap-3">
-                <div className="w-12 h-12 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-lg shrink-0">{group.name.charAt(0)}</div>
+                <div className="w-12 h-12 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-lg shrink-0 overflow-hidden">{group.photo ? <img src={group.photo} alt="" className="w-full h-full object-cover" /> : group.name.charAt(0)}</div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-wa-text">{group.name}</h3>
                   <p className="text-sm text-wa-secondary mt-0.5 line-clamp-2">{group.description}</p>
@@ -250,26 +258,77 @@ export default function Home() {
         </div>
         {showCreateGroup && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center">
-            <div className="bg-wa-panel w-full sm:max-w-md sm:rounded-xl overflow-hidden">
-              <div className="bg-wa-header px-4 py-3 flex items-center justify-between">
-                <h2 className="text-base font-medium text-wa-text">{createKind === "comunidade" ? "Criar nova comunidade" : "Criar novo grupo"}</h2>
+            <div className="bg-wa-panel w-full sm:max-w-lg sm:rounded-xl overflow-hidden max-h-[92vh] flex flex-col">
+              <div className="bg-wa-header px-4 py-3 flex items-center justify-between shrink-0">
+                <div>
+                  <h2 className="text-base font-medium text-wa-text">{createKind === "comunidade" ? "Criar nova comunidade" : "Criar novo grupo"}</h2>
+                  <p className="text-xs text-wa-secondary mt-0.5">Configure como no WhatsApp</p>
+                </div>
                 <button onClick={() => setShowCreateGroup(false)} className="text-wa-secondary"><X size={22} /></button>
               </div>
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-5 overflow-y-auto">
+                <div className="flex flex-col items-center">
+                  <label className="relative w-24 h-24 rounded-full bg-wa-input border-2 border-dashed border-wa-border flex items-center justify-center overflow-hidden cursor-pointer">
+                    {newGroupPhoto ? <img src={newGroupPhoto} alt="Foto do grupo" className="w-full h-full object-cover" /> : <div className="flex flex-col items-center text-wa-secondary"><ImagePlus size={27} /><span className="text-[10px] mt-1">Adicionar foto</span></div>}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 3 * 1024 * 1024) { alert("Escolha uma imagem de até 3 MB."); e.currentTarget.value = ""; return; }
+                      const reader = new FileReader();
+                      reader.onload = () => { if (typeof reader.result === "string") setNewGroupPhoto(reader.result); };
+                      reader.readAsDataURL(file);
+                    }} />
+                  </label>
+                  <span className="text-xs text-wa-secondary mt-2">Foto de perfil · opcional</span>
+                </div>
                 <div>
-                  <label className="text-xs text-wa-secondary mb-1.5 block">Nome do diário</label>
+                  <label className="text-xs text-wa-secondary mb-1.5 block">Nome {createKind === "comunidade" ? "da comunidade" : "do grupo"} *</label>
                   <input type="text" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)}
                     placeholder={createKind === "comunidade" ? "Ex: Comunidade Free Fire" : "Ex: Grupo de ranked"} maxLength={40}
                     className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none placeholder-wa-muted" autoFocus />
+                  <p className="text-[11px] text-wa-muted text-right mt-1">{newGroupName.length}/40</p>
                 </div>
                 <div>
                   <label className="text-xs text-wa-secondary mb-1.5 block">Descrição</label>
                   <textarea value={newGroupDesc} onChange={(e) => setNewGroupDesc(e.target.value)}
-                    placeholder={createKind === "comunidade" ? "Sobre o que é essa comunidade..." : "Sobre o que é esse grupo..."} rows={3} maxLength={200}
+                    placeholder="Explique o objetivo e as regras..." rows={3} maxLength={200}
                     className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none placeholder-wa-muted resize-none" />
+                  <p className="text-[11px] text-wa-muted text-right mt-1">{newGroupDesc.length}/200</p>
                 </div>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div><p className="text-sm font-medium text-wa-text">Adicionar participantes</p><p className="text-xs text-wa-secondary">Selecione pessoas encontradas nas conversas</p></div>
+                    <span className="text-xs text-wa-green font-medium">{selectedNewMembers.length} selecionados</span>
+                  </div>
+                  {availableMembers.length ? (
+                    <div className="max-h-40 overflow-y-auto rounded-lg border border-wa-border divide-y divide-wa-border">
+                      {availableMembers.map((member) => (
+                        <label key={member} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-wa-hover">
+                          <div className="w-9 h-9 rounded-full bg-wa-green flex items-center justify-center text-white font-medium">{member.charAt(0).toUpperCase()}</div>
+                          <span className="flex-1 text-sm text-wa-text">{member}</span>
+                          <input type="checkbox" checked={selectedNewMembers.includes(member)} onChange={(e) => setSelectedNewMembers((prev) => e.target.checked ? [...prev, member] : prev.filter((name) => name !== member))} className="h-4 w-4 accent-[#00a884]" />
+                        </label>
+                      ))}
+                    </div>
+                  ) : <p className="text-xs text-wa-secondary bg-wa-input rounded-lg p-3">Ainda não há usuários conhecidos para adicionar. Eles aparecerão aqui quando participarem das conversas.</p>}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-wa-text mb-2">Privacidade</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => setNewGroupPrivacy("publico")} className={`rounded-lg border p-3 text-left ${newGroupPrivacy === "publico" ? "border-wa-green bg-wa-green/10" : "border-wa-border"}`}>
+                      <Globe size={19} className="text-wa-green mb-1.5" /><span className="block text-sm text-wa-text">Público</span><span className="block text-[11px] text-wa-secondary mt-1">Pode ser encontrado</span>
+                    </button>
+                    <button type="button" onClick={() => setNewGroupPrivacy("privado")} className={`rounded-lg border p-3 text-left ${newGroupPrivacy === "privado" ? "border-wa-green bg-wa-green/10" : "border-wa-border"}`}>
+                      <Lock size={19} className="text-wa-green mb-1.5" /><span className="block text-sm text-wa-text">Privado</span><span className="block text-[11px] text-wa-secondary mt-1">Somente convidados</span>
+                    </button>
+                  </div>
+                </div>
+                <label className="flex items-center gap-3 rounded-lg bg-wa-input p-3 cursor-pointer">
+                  <input type="checkbox" checked={newGroupOnlyAdmins} onChange={(e) => setNewGroupOnlyAdmins(e.target.checked)} className="h-4 w-4 accent-[#00a884]" />
+                  <div><span className="block text-sm text-wa-text">Somente administradores enviam mensagens</span><span className="block text-xs text-wa-secondary mt-0.5">Útil para avisos e anúncios</span></div>
+                </label>
                 <button onClick={handleCreateGroup} disabled={!newGroupName.trim()}
-                  className="w-full bg-wa-green text-white font-medium py-3 rounded-lg disabled:opacity-40">{createKind === "comunidade" ? "Criar comunidade" : "Criar grupo"}</button>
+                  className="w-full bg-wa-green text-white font-medium py-3 rounded-lg disabled:opacity-40 flex items-center justify-center gap-2"><Check size={18} />{createKind === "comunidade" ? "Criar comunidade" : "Criar grupo"}</button>
               </div>
             </div>
           </div>
