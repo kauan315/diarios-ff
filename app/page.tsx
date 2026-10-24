@@ -99,9 +99,9 @@ export default function Home() {
   const myChats = groups.filter((g) => g.isJoined).filter((g) =>
     g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  const allCommunities = groups.filter((g) =>
+  const allCommunities = groups.filter((g) => (g.isPublic !== false || g.isJoined) && (
     g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ));
 
   const availableMembers = Array.from(new Set(Object.values(messages).flatMap((list) => list.map((msg) => msg.sender).filter((sender) => sender && sender !== nickname))));
 
