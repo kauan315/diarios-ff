@@ -230,13 +230,21 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
               </div>
             </div>
             <div className="mx-4 border-b border-wa-border" />
-            <div className="w-full flex items-center gap-4 px-4 py-4 text-left">
+            <button onClick={async () => {
+              setPasswordNotice("");
+              if (!isSupabaseConfigured || !supabase || !accountEmail) { setPasswordNotice("A redefinição de senha exige uma conta com e-mail vinculada."); return; }
+              setResetBusy(true);
+              const { error } = await supabase.auth.resetPasswordForEmail(accountEmail, { redirectTo: window.location.origin });
+              setResetBusy(false);
+              setPasswordNotice(error ? "Não foi possível enviar o e-mail. Tente novamente." : "Enviamos um link para redefinir sua senha. Confira também a pasta de spam.");
+            }} disabled={resetBusy} className="w-full flex items-center gap-4 px-4 py-4 text-left hover:bg-wa-hover disabled:opacity-60">
               <Lock size={22} className="text-wa-secondary shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-[16px] text-wa-text">Senha</p>
-                <p className="text-[13px] text-wa-secondary mt-0.5">Segurança e acesso à conta</p>
+                <p className="text-[13px] text-wa-secondary mt-0.5">{resetBusy ? "Enviando link..." : "A senha não pode ser exibida por segurança. Toque para receber um link de redefinição."}</p>
+                {passwordNotice && <p role="status" className="text-[13px] text-wa-green-dark mt-2">{passwordNotice}</p>}
               </div>
-            </div>
+            </button>
           </div>
         </div>
       )}
