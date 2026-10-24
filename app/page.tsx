@@ -645,6 +645,7 @@ export default function Home() {
       {showSettings && (
         <ProfileScreen
           nickname={nickname}
+          onNicknameChange={(value) => { setNickname(value); saveToStorage("dff_nickname", value); }}
           profilePhoto={profilePhoto}
           hideProfilePhoto={hideProfilePhoto}
           onProfilePhotoChange={setProfilePhoto}
