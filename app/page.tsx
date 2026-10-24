@@ -272,7 +272,6 @@ export default function Home() {
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-[22px] font-semibold text-wa-green">Diários FF</h1>
             <div className="flex items-center gap-5 text-wa-secondary">
-              <button className="hover:text-wa-text" title="Câmera"><Camera size={22} /></button>
               <div className="relative">
                 <button
                   onClick={() => setShowQuickMenu((open) => !open)}
