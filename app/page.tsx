@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Search, MessageCircle, Users, Settings, Plus, ArrowLeft, MoreVertical,
   Send, Smile, Paperclip, Info, Shield, UserPlus, LogOut, X, Compass, Bot, Palette,
-  Camera, Phone, CircleDot, MessageCirclePlus, Pin,
+  Camera, Phone, CircleDot, MessageCirclePlus, Pin, Video, Mic,
 } from "lucide-react";
 import ProfileScreen from "./ProfileScreen";
 import GroupInfoScreen from "./GroupInfoScreen";
@@ -304,13 +304,11 @@ export default function Home() {
                 </div>
                 <div className="flex justify-between items-center mt-0.5 gap-2">
                   <p className="text-[14px] text-wa-secondary truncate">{group.lastMessage}</p>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {group.unread > 0 && (
-                      <span className="bg-wa-green text-white text-[12px] font-semibold rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1.5">
-                        {group.unread}
-                      </span>
-                    )}
-                  </div>
+                  {group.unread > 0 && (
+                    <span className="bg-wa-green text-white text-[12px] font-semibold rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1.5">
+                      {group.unread}
+                    </span>
+                  )}
                 </div>
               </div>
             </button>
@@ -330,17 +328,14 @@ export default function Home() {
             <span className="text-[11px] font-medium">Conversas</span>
           </button>
           <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
-            <CircleDot size={24} />
-            <span className="text-[11px]">Atualizações</span>
+            <CircleDot size={24} /><span className="text-[11px]">Atualizações</span>
           </button>
           <button onClick={() => { setScreen("comunidades"); setSelectedGroupId(null); setSearchQuery(""); }}
             className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
-            <Users size={24} />
-            <span className="text-[11px]">Comunidades</span>
+            <Users size={24} /><span className="text-[11px]">Comunidades</span>
           </button>
           <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
-            <Phone size={24} />
-            <span className="text-[11px]">Ligações</span>
+            <Phone size={24} /><span className="text-[11px]">Ligações</span>
           </button>
         </div>
 
@@ -355,25 +350,55 @@ export default function Home() {
       <div className={`${showChat ? "flex" : "hidden md:flex"} flex-1 flex-col relative bg-wa-bg`}>
         {selectedGroup ? (
           <>
-            <div className="bg-wa-header px-3 md:px-4 h-[60px] flex items-center gap-3 shrink-0">
-              <button className="md:hidden text-wa-secondary" onClick={() => setSelectedGroupId(null)}><ArrowLeft size={24} /></button>
-              <div className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold cursor-pointer" onClick={() => setShowGroupInfo(true)}>{selectedGroup.name.charAt(0)}</div>
+            <div className="bg-wa-panel px-2 md:px-3 h-[60px] flex items-center gap-2 shrink-0 border-b border-wa-border">
+              <button className="md:hidden text-wa-secondary p-1" onClick={() => setSelectedGroupId(null)}>
+                <ArrowLeft size={24} />
+              </button>
+              <div
+                className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold cursor-pointer shrink-0"
+                onClick={() => setShowGroupInfo(true)}
+              >
+                {selectedGroup.name.charAt(0)}
+              </div>
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setShowGroupInfo(true)}>
                 <h2 className="font-medium text-wa-text truncate text-[16px]">{selectedGroup.name}</h2>
-                <p className="text-[12px] text-wa-secondary">{selectedGroup.members.toLocaleString("pt-BR")} membros{selectedGroup.onlyAdminsCanSend && " · Somente admins"}</p>
+                <p className="text-[12px] text-wa-secondary truncate">
+                  {selectedGroup.members.toLocaleString("pt-BR")} membros
+                  {selectedGroup.onlyAdminsCanSend && " · Somente admins"}
+                </p>
               </div>
-              <button className="text-wa-secondary" onClick={() => setShowGroupInfo(true)}><MoreVertical size={20} /></button>
+              <button className="text-wa-secondary p-2" title="Vídeo"><Video size={22} /></button>
+              <button className="text-wa-secondary p-2" title="Ligar"><Phone size={22} /></button>
+              <button className="text-wa-secondary p-2" onClick={() => setShowGroupInfo(true)}><MoreVertical size={20} /></button>
             </div>
-            <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-1 chat-bg">
+
+            <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 chat-bg">
+              <div className="flex justify-center py-1">
+                <span className="bg-white/90 text-wa-secondary text-[12px] px-3 py-1 rounded-lg shadow-sm">
+                  {new Date().toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}
+                </span>
+              </div>
+              <div className="flex justify-center px-2">
+                <div className="bg-[#fff3c9] text-[#54656f] text-[12.5px] px-3 py-2 rounded-lg max-w-[90%] text-center leading-snug shadow-sm">
+                  🔒 As mensagens e ligações são protegidas com a criptografia de ponta a ponta. Somente as pessoas que fazem parte da conversa podem ler, ouvir e compartilhar esse conteúdo.{" "}
+                  <span className="text-[#027eb5] font-medium">Saiba mais</span>
+                </div>
+              </div>
               {selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe && (
-                <div className="text-center py-3">
-                  <span className="bg-white/80 text-wa-secondary text-xs px-3 py-1.5 rounded-lg shadow-sm">🔒 Somente administradores podem enviar mensagens</span>
+                <div className="flex justify-center px-2">
+                  <div className="bg-white/90 text-wa-secondary text-[12.5px] px-3 py-2 rounded-lg max-w-[90%] text-center shadow-sm">
+                    🔒 Somente administradores podem enviar mensagens neste grupo.
+                  </div>
                 </div>
               )}
               {currentMessages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}>
                   <div className={`rounded-lg px-2.5 py-1.5 max-w-[85%] md:max-w-[65%] shadow-sm ${msg.isMe ? "bg-wa-bubble rounded-tr-none" : "bg-wa-incoming rounded-tl-none"}`}>
-                    {!msg.isMe && (<p className="text-[13px] text-wa-green-dark font-medium mb-0.5">{msg.sender}{msg.isAdmin && <span className="text-wa-muted font-normal"> · Admin</span>}</p>)}
+                    {!msg.isMe && (
+                      <p className="text-[13px] text-wa-green-dark font-medium mb-0.5">
+                        {msg.sender}{msg.isAdmin && <span className="text-wa-muted font-normal"> · Admin</span>}
+                      </p>
+                    )}
                     <p className="text-[14.2px] text-wa-text leading-snug whitespace-pre-wrap break-words">{msg.text}</p>
                     <p className={`text-[11px] text-right mt-0.5 ${msg.isMe ? "text-wa-secondary" : "text-wa-muted"}`}>{msg.time}</p>
                   </div>
@@ -381,18 +406,35 @@ export default function Home() {
               ))}
               <div ref={messagesEndRef} />
             </div>
-            <div className="bg-wa-header px-2 md:px-3 py-2 flex items-center gap-2 shrink-0">
-              <button className="text-wa-secondary p-1.5"><Smile size={24} /></button>
-              <button className="text-wa-secondary p-1.5"><Paperclip size={22} /></button>
-              <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                placeholder={selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe ? "Somente admins podem enviar" : "Mensagem"}
-                disabled={selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe}
-                className="flex-1 bg-wa-panel rounded-lg px-4 py-2.5 text-[15px] outline-none text-wa-text placeholder-wa-muted disabled:opacity-50 border border-wa-border" />
-              <button onClick={handleSendMessage}
-                disabled={!inputText.trim() || (selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe)}
-                className="bg-wa-green text-white p-2.5 rounded-full disabled:opacity-40"><Send size={18} /></button>
+
+            <div className="bg-[#f0f2f5] px-2 py-1.5 flex items-end gap-1.5 shrink-0">
+              <div className="flex-1 flex items-center bg-white rounded-full px-2 py-1 min-h-[42px] shadow-sm">
+                <button className="text-wa-secondary p-1.5 shrink-0"><Smile size={24} /></button>
+                <input
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                  placeholder={selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe ? "Somente admins podem enviar" : "Mensagem"}
+                  disabled={selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe}
+                  className="flex-1 bg-transparent px-2 py-2 text-[15px] outline-none text-wa-text placeholder-wa-muted disabled:opacity-50"
+                />
+                <button className="text-wa-secondary p-1.5 shrink-0"><Paperclip size={22} /></button>
+                {!inputText.trim() && (
+                  <button className="text-wa-secondary p-1.5 shrink-0"><Camera size={22} /></button>
+                )}
+              </div>
+              {inputText.trim() && !(selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe) ? (
+                <button onClick={handleSendMessage} className="bg-wa-green text-white p-2.5 rounded-full shrink-0 shadow-sm">
+                  <Send size={20} />
+                </button>
+              ) : (
+                <button className="bg-wa-green text-white p-2.5 rounded-full shrink-0 shadow-sm">
+                  <Mic size={20} />
+                </button>
+              )}
             </div>
+
             {showGroupInfo && (
               <GroupInfoScreen
                 group={selectedGroup}
