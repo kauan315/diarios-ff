@@ -4,12 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import {
   Search, MessageCircle, Users, Settings, Plus, ArrowLeft, MoreVertical,
   Send, Smile, Paperclip, Info, Shield, UserPlus, LogOut, X, Compass, Bot, Palette,
-  MessageCirclePlus, Pin, Mic, ImagePlus, Check, Lock, Globe, Heart,
+  MessageCirclePlus, Pin, Mic, ImagePlus, Check, Lock, Globe, Heart, Paperclip, Image, FileAudio, FileText, ListChecks,
 } from "lucide-react";
 import ProfileScreen from "./ProfileScreen";
 import GroupInfoScreen from "./GroupInfoScreen";
 
-type Message = { id: number; sender: string; text: string; time: string; isMe: boolean; isAdmin?: boolean; audioData?: string };
+type Message = { id: number; sender: string; text: string; time: string; isMe: boolean; isAdmin?: boolean; audioData?: string; attachmentData?: string; attachmentName?: string; attachmentType?: string; pollData?: { question: string; options: { text: string; votes: string[] }[] } };
 type Group = {
   id: number; name: string; description: string; members: number;
   lastMessage: string; time: string; unread: number;
@@ -62,6 +62,13 @@ export default function Home() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [showPollComposer, setShowPollComposer] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const filesInputRef = useRef<HTMLInputElement>(null);
   const [showFabMenu, setShowFabMenu] = useState(false);
   const [showUserSearch, setShowUserSearch] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -210,6 +217,72 @@ export default function Home() {
     } catch {
       alert("Permita o acesso ao microfone para gravar e enviar áudio.");
     }
+  };
+
+  const handleAttachmentSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !selectedGroupId || !selectedGroup) return;
+    if (selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) {
+      alert("Somente administradores podem enviar mensagens neste grupo."); return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      alert("O arquivo precisa ter até 3 MB."); return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => alert("Não foi possível abrir esse arquivo.");
+    reader.onload = () => {
+      if (typeof reader.result !== "string") return;
+      const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      const isAudio = file.type.startsWith("audio/");
+      const isImage = file.type.startsWith("image/");
+      const message: Message = {
+        id: Date.now(), sender: nickname, text: isAudio ? "Áudio anexado" : isImage ? "Foto" : file.name,
+        time, isMe: true, attachmentData: reader.result, attachmentName: file.name, attachmentType: file.type,
+        ...(isAudio ? { audioData: reader.result } : {}),
+      };
+      setMessages((prev) => ({ ...prev, [selectedGroupId]: [...(prev[selectedGroupId] || []), message] }));
+      const lastMessage = isAudio ? "🎵 Áudio anexado" : isImage ? "📷 Foto" : "📎 " + file.name;
+      setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, lastMessage, time, unread: 0, isJoined: true } : g));
+      setShowAttachmentMenu(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCreatePoll = () => {
+    if (!selectedGroupId || !selectedGroup || !pollQuestion.trim()) return;
+    if (selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) {
+      alert("Somente administradores podem enviar mensagens neste grupo."); return;
+    }
+    const options = pollOptions.map((text) => text.trim()).filter(Boolean);
+    if (options.length < 2) {
+      alert("Adicione pelo menos duas opções para a enquete."); return;
+    }
+    const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    const message: Message = {
+      id: Date.now(), sender: nickname, text: "Enquete: " + pollQuestion.trim(), time, isMe: true,
+      pollData: { question: pollQuestion.trim(), options: options.map((text) => ({ text, votes: [] })) },
+    };
+    setMessages((prev) => ({ ...prev, [selectedGroupId]: [...(prev[selectedGroupId] || []), message] }));
+    setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, lastMessage: "📊 Enquete: " + pollQuestion.trim(), time, unread: 0, isJoined: true } : g));
+    setPollQuestion(""); setPollOptions(["", ""]); setShowPollComposer(false); setShowAttachmentMenu(false);
+  };
+
+  const handleVotePoll = (messageId: number, optionIndex: number) => {
+    if (!selectedGroupId) return;
+    setMessages((prev) => ({
+      ...prev,
+      [selectedGroupId]: (prev[selectedGroupId] || []).map((msg) => {
+        if (msg.id !== messageId || !msg.pollData) return msg;
+        const options = msg.pollData.options.map((option, index) => ({
+          ...option,
+          votes: index === optionIndex
+            ? (option.votes.includes(nickname) ? option.votes : [...option.votes, nickname])
+            : option.votes.filter((voter) => voter !== nickname),
+        }));
+        return { ...msg, pollData: { ...msg.pollData, options } };
+      }),
+    }));
   };
 
   const handleJoinGroup = (groupId: number) => {
@@ -644,11 +717,29 @@ export default function Home() {
                         {msg.sender}{msg.isAdmin && <span className="text-wa-muted font-normal"> · Admin</span>}
                       </p>
                     )}
-                    {msg.audioData ? (
+                    {msg.pollData ? (
+                      <div className="min-w-[220px] space-y-2 py-1">
+                        <p className="font-semibold text-[15px]">{msg.pollData.question}</p>
+                        {msg.pollData.options.map((option, optionIndex) => {
+                          const totalVotes = msg.pollData!.options.reduce((sum, item) => sum + item.votes.length, 0);
+                          const voted = option.votes.includes(nickname);
+                          return <button key={optionIndex} onClick={() => handleVotePoll(msg.id, optionIndex)} className="w-full text-left rounded-lg border border-wa-border px-3 py-2 hover:bg-wa-hover">
+                            <span className="flex justify-between gap-2 text-sm"><span>{option.text}</span><span>{option.votes.length}</span></span>
+                            <span className="block h-1.5 rounded-full bg-wa-input mt-2 overflow-hidden"><span className="block h-full bg-wa-green rounded-full" style={{ width: totalVotes ? (option.votes.length / totalVotes * 100) + "%" : "0%" }} /></span>
+                            {voted && <span className="text-[11px] text-wa-green-dark">Seu voto</span>}
+                          </button>;
+                        })}
+                        <p className="text-[11px] text-wa-secondary">{msg.pollData.options.reduce((sum, item) => sum + item.votes.length, 0)} votos · toque em uma opção para votar</p>
+                      </div>
+                    ) : msg.attachmentData && msg.attachmentType?.startsWith("image/") ? (
+                      <div className="space-y-1"><img src={msg.attachmentData} alt={msg.attachmentName || "Imagem enviada"} className="max-w-full max-h-64 rounded-lg object-contain" /><p className="text-[12px]">{msg.attachmentName || "Foto"}</p></div>
+                    ) : msg.audioData ? (
                       <div className="min-w-[220px] py-1">
                         <audio controls preload="metadata" src={msg.audioData} className="w-full max-w-[280px]" />
-                        <p className="text-[12px] text-wa-secondary mt-1">Mensagem de áudio</p>
+                        <p className="text-[12px] text-wa-secondary mt-1">{msg.attachmentName || "Mensagem de áudio"}</p>
                       </div>
+                    ) : msg.attachmentData ? (
+                      <a href={msg.attachmentData} download={msg.attachmentName || "arquivo"} className="flex items-center gap-2 underline break-all text-[14px]"><FileText size={22} />{msg.attachmentName || "Baixar arquivo"}</a>
                     ) : (
                       <p className="text-[14.2px] text-wa-text leading-snug whitespace-pre-wrap break-words">{msg.text}</p>
                     )}
@@ -671,8 +762,37 @@ export default function Home() {
                   disabled={selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe}
                   className="flex-1 bg-transparent px-2 py-2 text-[15px] outline-none text-wa-text placeholder-wa-muted disabled:opacity-50"
                 />
-                <button className="text-wa-secondary p-1.5 shrink-0"><Paperclip size={22} /></button>
-                              </div>
+                <button onClick={() => setShowAttachmentMenu((open) => !open)} aria-label="Anexar" title="Anexar" className="text-wa-secondary p-1.5 shrink-0"><Paperclip size={22} /></button>
+                <input ref={galleryInputRef} type="file" accept="image/*" className="hidden" onChange={handleAttachmentSelected} />
+                <input ref={audioInputRef} type="file" accept="audio/*" className="hidden" onChange={handleAttachmentSelected} />
+                <input ref={filesInputRef} type="file" className="hidden" onChange={handleAttachmentSelected} />
+              </div>
+              {showAttachmentMenu && (
+                <>
+                  <button className="fixed inset-0 z-40 cursor-default" aria-label="Fechar anexos" onClick={() => setShowAttachmentMenu(false)} />
+                  <div className="absolute bottom-[66px] left-2 z-50 w-56 rounded-xl bg-wa-panel border border-wa-border shadow-xl p-2 space-y-1">
+                    <button onClick={() => galleryInputRef.current?.click()} className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-left text-sm text-wa-text hover:bg-wa-hover"><Image size={19} className="text-wa-green" />Galeria</button>
+                    <button onClick={() => audioInputRef.current?.click()} className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-left text-sm text-wa-text hover:bg-wa-hover"><FileAudio size={19} className="text-wa-green" />Áudio</button>
+                    <button onClick={() => filesInputRef.current?.click()} className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-left text-sm text-wa-text hover:bg-wa-hover"><FileText size={19} className="text-wa-green" />Arquivos</button>
+                    <button onClick={() => { setShowPollComposer(true); setShowAttachmentMenu(false); }} className="flex items-center gap-3 w-full rounded-lg px-3 py-2.5 text-left text-sm text-wa-text hover:bg-wa-hover"><ListChecks size={19} className="text-wa-green" />Enquete</button>
+                  </div>
+                </>
+              )}
+              {showPollComposer && (
+                <div className="absolute inset-0 z-[60] bg-black/60 flex items-center justify-center p-4">
+                  <div className="w-full max-w-md rounded-2xl bg-wa-panel border border-wa-border p-5 space-y-4 shadow-xl">
+                    <div className="flex items-center justify-between"><h3 className="text-lg font-semibold text-wa-text">Criar enquete</h3><button onClick={() => setShowPollComposer(false)} aria-label="Fechar"><X size={21} /></button></div>
+                    <label className="block text-sm text-wa-secondary">Pergunta
+                      <input value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} maxLength={180} placeholder="Faça uma pergunta ao grupo" className="mt-1 w-full rounded-lg bg-wa-input px-3 py-2.5 text-wa-text" />
+                    </label>
+                    <div className="space-y-2"><p className="text-sm text-wa-secondary">Opções de resposta</p>
+                      {pollOptions.map((option, index) => <div key={index} className="flex gap-2"><input value={option} onChange={(e) => setPollOptions((prev) => prev.map((item, i) => i === index ? e.target.value : item))} maxLength={100} placeholder={`Opção ${index + 1}`} className="min-w-0 flex-1 rounded-lg bg-wa-input px-3 py-2.5 text-wa-text" />{pollOptions.length > 2 && <button onClick={() => setPollOptions((prev) => prev.filter((_, i) => i !== index))} aria-label="Remover opção"><X size={18} /></button>}</div>)}
+                      {pollOptions.length < 6 && <button onClick={() => setPollOptions((prev) => [...prev, ""])} className="text-sm text-wa-green-dark">+ Adicionar opção</button>}
+                    </div>
+                    <button onClick={handleCreatePoll} className="w-full rounded-lg bg-wa-green text-white py-3 font-medium">Enviar enquete</button>
+                  </div>
+                </div>
+              )}
               {inputText.trim() && !(selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe) ? (
                 <button onClick={handleSendMessage} className="bg-wa-green text-white p-2.5 rounded-full shrink-0 shadow-sm">
                   <Send size={20} />
