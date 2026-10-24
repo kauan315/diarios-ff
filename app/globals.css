@@ -66,6 +66,10 @@
 :root[data-preset="sunset-fire"] { --rk-bg:#170805; --rk-panel:#2b120b; --rk-header:#39180d; --rk-input:#401b0e; --rk-border:#6a2c18; --rk-text:#fff0e8; --rk-secondary:#d9a18b; --rk-muted:#a77865; --rk-green:#ff7043; --rk-green-dark:#df4b23; color-scheme:dark; }
 :root[data-preset="midnight"] { --rk-bg:#050914; --rk-panel:#101b31; --rk-header:#152542; --rk-input:#1a2945; --rk-border:#2d4166; --rk-text:#edf3ff; --rk-secondary:#a7b7d5; --rk-muted:#7186ad; --rk-green:#9bbcff; --rk-green-dark:#5d8fe5; color-scheme:dark; }
 
+/* App's original default conversation style: soft sky blue + white. */
+:root[data-mode="light"] .dff-message-out:not(.dff-sticker-message):not(.dff-media-message) { background:#dceeff !important; color:#172b3b; }
+:root[data-mode="light"] .dff-message-in:not(.dff-sticker-message):not(.dff-media-message) { background:#ffffff !important; color:#172b3b; }
+
 /* Free: ordinary rounded bubbles, with the sender's bubble in the chosen color. */
 :root[data-preset="classic-green"] .dff-message-out:not(.dff-sticker-message):not(.dff-media-message) { background:#d9fdd3 !important; color:#18211d; }
 :root[data-preset="pink-candy"] .dff-message-out:not(.dff-sticker-message):not(.dff-media-message) { background:#f8c7dd !important; color:#382330; }
