@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   ArrowLeft, MoreVertical, Search, Shield, Bell, Image as ImageIcon,
-  Lock, MessageSquareLock, Heart, Contact, Upload, Trash2, LogOut, Flag,
+  Lock, Heart, Contact, Upload, Trash2, LogOut, Flag,
   Eye, ChevronRight,
 } from "lucide-react";
 
@@ -205,18 +205,7 @@ export default function GroupInfoScreen({
                 </p>
               </div>
             </button>
-            <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
-              <MessageSquareLock size={22} className="text-wa-secondary" />
-              <div className="flex-1">
-                <p className="text-[15px] text-wa-text">Conversas trancadas</p>
-                <p className="text-xs text-wa-secondary">
-                  Tranca e oculta a conversa neste dispositivo.
-                </p>
-              </div>
-              <div className="w-10 h-6 rounded-full bg-wa-input relative">
-                <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 shadow" />
-              </div>
-            </button>
+
 
             <button
               onClick={onToggleOnlyAdmins}
