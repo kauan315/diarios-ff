@@ -438,6 +438,24 @@ export default function Home() {
     setShowGroupInfo(false);
   };
 
+  const handleDeleteGroup = (groupId: number) => {
+    const group = groups.find((g) => g.id === groupId);
+    if (!group?.createdByMe) {
+      alert("Somente quem criou o grupo pode apagá-lo completamente.");
+      return;
+    }
+    if (!confirm(`Apagar definitivamente "${group.name}"? O grupo e todas as mensagens salvas neste aparelho serão removidos e não poderão ser recuperados.`)) return;
+    setGroups((prev) => prev.filter((g) => g.id !== groupId));
+    setMessages((prev) => {
+      const next = { ...prev };
+      delete next[groupId];
+      return next;
+    });
+    setSelectedGroupId(null);
+    setShowGroupInfo(false);
+    setScreen("conversas");
+  };
+
   const toggleOnlyAdmins = () => {
     if (!selectedGroupId || !selectedGroup || !isCurrentUserAdmin(selectedGroup)) return;
     setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, onlyAdminsCanSend: !g.onlyAdminsCanSend } : g));
@@ -978,6 +996,7 @@ export default function Home() {
                 onClose={() => setShowGroupInfo(false)}
                 onLeave={() => handleLeaveGroup(selectedGroup.id)}
                 onClearConversation={() => handleClearConversation(selectedGroup.id)}
+                onDeleteGroup={() => handleDeleteGroup(selectedGroup.id)}
                 canManage={!!selectedGroup && isCurrentUserAdmin(selectedGroup)}
                 onToggleOnlyAdmins={toggleOnlyAdmins}
                 onToggleAdminApproval={toggleAdminApproval}
