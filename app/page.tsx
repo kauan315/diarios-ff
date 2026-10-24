@@ -287,7 +287,7 @@ export default function Home() {
   const handleSendMessage = () => {
     if (!inputText.trim() || !selectedGroupId || !selectedGroup) return;
     if (selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) {
-      alert("Somente administradores podem enviar mensagens neste grupo."); return;
+      console.info("Somente administradores podem enviar mensagens neste grupo."); return;
     }
     const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const newMessage: Message = { id: Date.now(), sender: nickname, text: inputText.trim(), time, isMe: true };
@@ -299,7 +299,7 @@ export default function Home() {
   const handleAudioButton = async () => {
     if (!selectedGroupId || !selectedGroup) return;
     if (selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) {
-      alert("Somente administradores podem enviar mensagens neste grupo."); return;
+      console.info("Somente administradores podem enviar mensagens neste grupo."); return;
     }
     if (isRecordingAudio) {
       mediaRecorderRef.current?.stop();
@@ -307,7 +307,7 @@ export default function Home() {
       return;
     }
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      alert("Este navegador não permite gravar áudio. Abra o site em um navegador atualizado e permita o acesso ao microfone.");
+      console.info("Este navegador não permite gravar áudio. Abra o site em um navegador atualizado e permita o acesso ao microfone.");
       return;
     }
     try {
@@ -321,17 +321,17 @@ export default function Home() {
       recorder.onerror = () => {
         stream.getTracks().forEach((track) => track.stop());
         setIsRecordingAudio(false);
-        alert("Não foi possível gravar o áudio. Tente novamente.");
+        console.info("Não foi possível gravar o áudio. Tente novamente.");
       };
       recorder.onstop = () => {
         stream.getTracks().forEach((track) => track.stop());
         const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || "audio/webm" });
         if (blob.size === 0) {
-          alert("O áudio ficou vazio. Tente gravar novamente.");
+          console.info("O áudio ficou vazio. Tente gravar novamente.");
           return;
         }
         if (blob.size > 1024 * 1024) {
-          alert("O áudio passou de 1 MB. Grave um áudio mais curto para conseguir enviar.");
+          console.info("O áudio passou de 1 MB. Grave um áudio mais curto para conseguir enviar.");
           return;
         }
         const reader = new FileReader();
@@ -342,13 +342,13 @@ export default function Home() {
           setMessages((prev) => ({ ...prev, [selectedGroupId]: [...(prev[selectedGroupId] || []), audioMessage] }));
           setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, lastMessage: "🎤 Mensagem de áudio", time, unread: 0, isJoined: true } : g));
         };
-        reader.onerror = () => alert("Não foi possível preparar o áudio para envio.");
+        reader.onerror = () => console.info("Não foi possível preparar o áudio para envio.");
         reader.readAsDataURL(blob);
       };
       recorder.start();
       setIsRecordingAudio(true);
     } catch {
-      alert("Permita o acesso ao microfone para gravar e enviar áudio.");
+      console.info("Permita o acesso ao microfone para gravar e enviar áudio.");
     }
   };
 
@@ -357,13 +357,13 @@ export default function Home() {
     event.target.value = "";
     if (!file || !selectedGroupId || !selectedGroup) return;
     if (selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) {
-      alert("Somente administradores podem enviar mensagens neste grupo."); return;
+      console.info("Somente administradores podem enviar mensagens neste grupo."); return;
     }
     if (file.size > 3 * 1024 * 1024) {
-      alert("O arquivo precisa ter até 3 MB."); return;
+      console.info("O arquivo precisa ter até 3 MB."); return;
     }
     const reader = new FileReader();
-    reader.onerror = () => alert("Não foi possível abrir esse arquivo.");
+    reader.onerror = () => console.info("Não foi possível abrir esse arquivo.");
     reader.onload = () => {
       if (typeof reader.result !== "string") return;
       const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -385,7 +385,7 @@ export default function Home() {
   const handleSendSticker = (sticker: string) => {
     if (!selectedGroupId || !selectedGroup) return;
     if (selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) {
-      alert("Somente administradores podem enviar mensagens neste grupo."); return;
+      console.info("Somente administradores podem enviar mensagens neste grupo."); return;
     }
     const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const message: Message = { id: Date.now(), sender: nickname, text: "Figurinha", time, isMe: true, sticker };
@@ -397,11 +397,11 @@ export default function Home() {
   const handleCreatePoll = () => {
     if (!selectedGroupId || !selectedGroup || !pollQuestion.trim()) return;
     if (selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) {
-      alert("Somente administradores podem enviar mensagens neste grupo."); return;
+      console.info("Somente administradores podem enviar mensagens neste grupo."); return;
     }
     const options = pollOptions.map((text) => text.trim()).filter(Boolean);
     if (options.length < 2) {
-      alert("Adicione pelo menos duas opções para a enquete."); return;
+      console.info("Adicione pelo menos duas opções para a enquete."); return;
     }
     const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const message: Message = {
@@ -452,7 +452,7 @@ export default function Home() {
   const handleDeleteGroup = (groupId: number) => {
     const group = groups.find((g) => g.id === groupId);
     if (!group?.createdByMe) {
-      alert("Somente quem criou o grupo pode apagá-lo completamente.");
+      console.info("Somente quem criou o grupo pode apagá-lo completamente.");
       return;
     }
     if (!confirm(`Apagar definitivamente "${group.name}"? O grupo e todas as mensagens salvas neste aparelho serão removidos e não poderão ser recuperados.`)) return;
@@ -606,13 +606,13 @@ export default function Home() {
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
-                      if (file.size > 3 * 1024 * 1024) { alert("Escolha uma imagem de até 3 MB."); e.currentTarget.value = ""; return; }
+                      if (file.size > 3 * 1024 * 1024) { console.info("Escolha uma imagem de até 3 MB."); e.currentTarget.value = ""; return; }
                       const reader = new FileReader();
-                      reader.onerror = () => alert("Não foi possível abrir essa imagem. Tente outra foto.");
+                      reader.onerror = () => console.info("Não foi possível abrir essa imagem. Tente outra foto.");
                       reader.onload = () => {
                         if (typeof reader.result !== "string") return;
                         const image = new window.Image();
-                        image.onerror = () => alert("Essa imagem não pôde ser carregada. Tente outra.");
+                        image.onerror = () => console.info("Essa imagem não pôde ser carregada. Tente outra.");
                         image.onload = () => {
                           const canvas = document.createElement("canvas");
                           const maxSide = 480;
@@ -620,10 +620,10 @@ export default function Home() {
                           canvas.width = Math.max(1, Math.round(image.width * scale));
                           canvas.height = Math.max(1, Math.round(image.height * scale));
                           const context = canvas.getContext("2d");
-                          if (!context) { alert("Não foi possível preparar a imagem."); return; }
+                          if (!context) { console.info("Não foi possível preparar a imagem."); return; }
                           context.drawImage(image, 0, 0, canvas.width, canvas.height);
                           const compressedPhoto = canvas.toDataURL("image/jpeg", 0.78);
-                          if (compressedPhoto.length > 450000) { alert("Essa foto ficou muito grande. Escolha outra imagem."); return; }
+                          if (compressedPhoto.length > 450000) { console.info("Essa foto ficou muito grande. Escolha outra imagem."); return; }
                           setNewGroupPhoto(compressedPhoto);
                         };
                         image.src = reader.result;
