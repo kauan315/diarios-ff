@@ -15,6 +15,7 @@ type Group = {
   onlyAdminsCanSend: boolean;
   createdByMe?: boolean;
   photo?: string;
+  isFavorite?: boolean;
 };
 
 type Props = {
@@ -23,6 +24,7 @@ type Props = {
   onClose: () => void;
   onLeave: () => void;
   onToggleOnlyAdmins: () => void;
+  onToggleFavorite: () => void;
 };
 
 const FAKE_MEMBERS = [
@@ -42,6 +44,7 @@ export default function GroupInfoScreen({
   onClose,
   onLeave,
   onToggleOnlyAdmins,
+  onToggleFavorite,
 }: Props) {
   const [tab, setTab] = useState<"membros" | "midias" | "config">("membros");
   const [descExpanded, setDescExpanded] = useState(false);
@@ -249,9 +252,10 @@ export default function GroupInfoScreen({
             </button>
 
             
-            <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
-              <Heart size={22} className="text-wa-secondary" />
-              <p className="text-[15px] text-wa-text">Adicionar aos favoritos</p>
+            <button onClick={onToggleFavorite} className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
+              <Heart size={22} className={group.isFavorite ? "text-wa-green fill-wa-green" : "text-wa-secondary"} />
+              <p className="text-[15px] text-wa-text">{group.isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}</p>
+              {group.isFavorite && <span className="ml-auto text-xs text-wa-green">Favorito</span>}
             </button>
             
             
