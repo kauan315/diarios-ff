@@ -724,7 +724,7 @@ export default function Home() {
               )}
               {currentMessages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}>
-                  <div className={`dff-message-bubble ${msg.sticker ? "bg-transparent shadow-none px-0 py-0 max-w-[85%]" : `${msg.isMe ? "dff-message-out bg-wa-bubble rounded-tr-none" : "dff-message-in bg-wa-incoming rounded-tl-none"} rounded-lg px-2.5 py-1.5 max-w-[85%] md:max-w-[65%] shadow-sm`}`}>
+                  <div className={`dff-message-bubble ${msg.sticker ? "dff-sticker-message bg-transparent shadow-none px-0 py-0 max-w-[85%]" : (msg.attachmentData || msg.audioData) ? `dff-media-message ${msg.isMe ? "dff-message-out bg-wa-bubble" : "dff-message-in bg-wa-incoming"} rounded-lg px-1.5 py-1 max-w-[85%] md:max-w-[65%] shadow-none` : `${msg.isMe ? "dff-message-out bg-wa-bubble rounded-tr-none" : "dff-message-in bg-wa-incoming rounded-tl-none"} rounded-lg px-2.5 py-1.5 max-w-[85%] md:max-w-[65%] shadow-sm`}`}>
                     {!msg.isMe && (
                       <p className="text-[13px] text-wa-green-dark font-medium mb-0.5">
                         {msg.sender}{msg.isAdmin && <span className="text-wa-muted font-normal"> · Admin</span>}
@@ -779,8 +779,8 @@ export default function Home() {
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                  placeholder={selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe ? "Somente admins podem enviar" : "Mensagem"}
-                  disabled={selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe}
+                  placeholder={selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup) ? "Somente admins podem enviar" : "Mensagem"}
+                  disabled={selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)}
                   className="flex-1 bg-transparent px-2 py-2 text-[15px] outline-none text-wa-text placeholder-wa-muted disabled:opacity-50"
                 />
                 <button onClick={() => setShowAttachmentMenu((open) => !open)} aria-label="Anexar" title="Anexar" className="text-wa-secondary p-1.5 shrink-0"><Paperclip size={22} /></button>
@@ -833,7 +833,7 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              {inputText.trim() && !(selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe) ? (
+              {inputText.trim() && !(selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) ? (
                 <button onClick={handleSendMessage} className="bg-wa-green text-white p-2.5 rounded-full shrink-0 shadow-sm">
                   <Send size={20} />
                 </button>
