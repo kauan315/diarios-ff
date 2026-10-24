@@ -38,6 +38,37 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
   const [accountEmail, setAccountEmail] = useState("");
   const [passwordNotice, setPasswordNotice] = useState("");
   const [resetBusy, setResetBusy] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+
+  useEffect(() => {
+    if (!showAccount) return;
+    setAccountEmail("");
+    setEmailError("");
+    if (!isSupabaseConfigured || !supabase) {
+      setEmailLoading(false);
+      setEmailError("Esta instalação não está conectada ao sistema de contas.");
+      return;
+    }
+
+    let cancelled = false;
+    setEmailLoading(true);
+    supabase.auth.getSession()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        const email = data.session?.user?.email || "";
+        setAccountEmail(email);
+        if (error) setEmailError("Não foi possível consultar a conta. Tente sair e entrar novamente.");
+        else if (!email) setEmailError("Nenhuma conta autenticada neste aparelho. Entre na conta com seu e-mail.");
+      })
+      .catch(() => {
+        if (!cancelled) setEmailError("Não foi possível carregar o e-mail. Verifique a conexão e tente novamente.");
+      })
+      .finally(() => {
+        if (!cancelled) setEmailLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [showAccount]);
 
   useEffect(() => {
     try {
@@ -226,7 +257,7 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
               <KeyRound size={22} className="text-wa-secondary shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-[16px] text-wa-text">Gmail da conta</p>
-                <p className="text-[13px] text-wa-secondary mt-0.5 break-all">{accountEmail || (isSupabaseConfigured ? "Carregando e-mail da conta..." : "Conta de demonstração — nenhum e-mail vinculado")}</p>
+                <p className="text-[13px] text-wa-secondary mt-0.5 break-all">{emailLoading ? "Carregando e-mail da conta..." : accountEmail || emailError || "Nenhum e-mail vinculado"}</p>
               </div>
             </div>
             <div className="mx-4 border-b border-wa-border" />
