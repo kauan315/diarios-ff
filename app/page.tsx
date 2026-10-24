@@ -14,6 +14,7 @@ type Group = {
   id: number; name: string; description: string; members: number;
   lastMessage: string; time: string; unread: number;
   onlyAdminsCanSend: boolean; isJoined: boolean; createdByMe?: boolean;
+  adminNames?: string[]; requireAdminApproval?: boolean; onlyAdminsCanEdit?: boolean; allMembersAreAdmins?: boolean;
   photo?: string; memberNames?: string[]; isCommunity?: boolean; isPublic?: boolean; isFavorite?: boolean;
 };
 
@@ -138,9 +139,11 @@ export default function Home() {
     localStorage.removeItem("dff_nickname");
   };
 
+  const isCurrentUserAdmin = (group: Group) => !!group.createdByMe || (group.adminNames || []).includes(nickname);
+
   const handleSendMessage = () => {
     if (!inputText.trim() || !selectedGroupId || !selectedGroup) return;
-    if (selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe) {
+    if (selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) {
       alert("Somente administradores podem enviar mensagens neste grupo."); return;
     }
     const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
@@ -170,8 +173,26 @@ export default function Home() {
   };
 
   const toggleOnlyAdmins = () => {
-    if (!selectedGroupId) return;
+    if (!selectedGroupId || !selectedGroup || !isCurrentUserAdmin(selectedGroup)) return;
     setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, onlyAdminsCanSend: !g.onlyAdminsCanSend } : g));
+  };
+
+  const toggleAdminApproval = () => {
+    if (!selectedGroupId || !selectedGroup || !isCurrentUserAdmin(selectedGroup)) return;
+    setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, requireAdminApproval: !g.requireAdminApproval } : g));
+  };
+
+  const toggleOnlyAdminsCanEdit = () => {
+    if (!selectedGroupId || !selectedGroup || !isCurrentUserAdmin(selectedGroup)) return;
+    setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, onlyAdminsCanEdit: !g.onlyAdminsCanEdit } : g));
+  };
+
+  const promoteAllMembers = () => {
+    if (!selectedGroupId || !selectedGroup || !isCurrentUserAdmin(selectedGroup)) return;
+    if (!confirm("Promover todos os membros deste grupo a administradores?")) return;
+    setGroups((prev) => prev.map((g) => g.id === selectedGroupId
+      ? { ...g, allMembersAreAdmins: true, adminNames: Array.from(new Set([...(g.adminNames || []), ...(g.memberNames || []), nickname].filter(Boolean))) }
+      : g));
   };
 
   const toggleFavorite = () => {
@@ -185,7 +206,7 @@ export default function Home() {
     const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const newGroup: Group = {
       id: newId, name: newGroupName.trim(), description: newGroupDesc.trim() || (createKind === "comunidade" ? "Comunidade criada no Diários FF" : "Grupo criado no Diários FF"),
-      members: 1 + selectedNewMembers.length, lastMessage: createKind === "comunidade" ? "Comunidade criada" : "Grupo criado", time, unread: 0, onlyAdminsCanSend: newGroupOnlyAdmins, isJoined: true, createdByMe: true,
+      members: 1 + selectedNewMembers.length, lastMessage: createKind === "comunidade" ? "Comunidade criada" : "Grupo criado", time, unread: 0, onlyAdminsCanSend: newGroupOnlyAdmins, isJoined: true, createdByMe: true, adminNames: [nickname], requireAdminApproval: false, onlyAdminsCanEdit: true,
       photo: newGroupPhoto, memberNames: [nickname, ...selectedNewMembers], isCommunity: createKind === "comunidade", isPublic: newGroupPrivacy === "publico",
     };
     setGroups((prev) => [newGroup, ...prev]);
@@ -557,7 +578,7 @@ export default function Home() {
                   <span className="text-[#027eb5] font-medium">Saiba mais</span>
                 </div>
               </div>
-              {selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe && (
+              {selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup) && (
                 <div className="flex justify-center px-2">
                   <div className="bg-white/90 text-wa-secondary text-[12.5px] px-3 py-2 rounded-lg max-w-[90%] text-center shadow-sm">
                     🔒 Somente administradores podem enviar mensagens neste grupo.
@@ -615,7 +636,11 @@ export default function Home() {
                 onClose={() => setShowGroupInfo(false)}
                 onLeave={() => handleLeaveGroup(selectedGroup.id)}
                 onClearConversation={() => handleClearConversation(selectedGroup.id)}
+                canManage={!!selectedGroup && isCurrentUserAdmin(selectedGroup)}
                 onToggleOnlyAdmins={toggleOnlyAdmins}
+                onToggleAdminApproval={toggleAdminApproval}
+                onToggleOnlyAdminsCanEdit={toggleOnlyAdminsCanEdit}
+                onPromoteAllMembers={promoteAllMembers}
                 onToggleFavorite={toggleFavorite}
               />
             )}
