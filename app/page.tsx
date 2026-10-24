@@ -164,7 +164,7 @@ export default function Home() {
   useEffect(() => {
     let cancelled = false;
     const query = userSearchQuery.trim();
-    if (!showUserSearch || !isSupabaseConfigured || !supabase || !/^\\d+$/.test(query)) {
+    if (!showUserSearch || !isSupabaseConfigured || !supabase || !/^\d+$/.test(query)) {
       setSearchedProfiles([]);
       return;
     }
