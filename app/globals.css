@@ -51,6 +51,28 @@
 :root[data-mode="dark"][data-theme="red"] .chat-bg { background-color: #120809; }
 :root[data-mode="light"] input, :root[data-mode="light"] textarea { color-scheme: light; }
 
+
+/* WhatsApp-GB-style theme presets. Premium presets are preview-only until billing is connected. */
+:root[data-preset="classic-green"] { --rk-bg:#090d0c; --rk-panel:#111816; --rk-header:#17211d; --rk-input:#202b26; --rk-border:#28372f; --rk-text:#edf5ef; --rk-secondary:#9aada1; --rk-muted:#718379; --rk-green:#39d98a; --rk-green-dark:#20b873; }
+:root[data-preset="pink-candy"] { --rk-bg:#fff7fb; --rk-panel:#ffffff; --rk-header:#fff0f7; --rk-input:#fff3f8; --rk-border:#f0d5e3; --rk-text:#382330; --rk-secondary:#846575; --rk-muted:#a68b9b; --rk-green:#f09bc2; --rk-green-dark:#d979a4; color-scheme:light; }
+:root[data-preset="sky-blue"] { --rk-bg:#f4f9ff; --rk-panel:#ffffff; --rk-header:#eaf4ff; --rk-input:#f0f7ff; --rk-border:#d6e6f8; --rk-text:#1e2e43; --rk-secondary:#5c7088; --rk-muted:#8597ab; --rk-green:#80baff; --rk-green-dark:#5799e8; color-scheme:light; }
+:root[data-preset="ruby-red"] { --rk-bg:#fff6f6; --rk-panel:#ffffff; --rk-header:#fff0f0; --rk-input:#fff2f2; --rk-border:#f1d8da; --rk-text:#3a2023; --rk-secondary:#876165; --rk-muted:#a7898b; --rk-green:#ed858c; --rk-green-dark:#d96b73; color-scheme:light; }
+:root[data-preset="neon-cyber"] { --rk-bg:#030b16; --rk-panel:#0b1830; --rk-header:#10213e; --rk-input:#12223b; --rk-border:#204260; --rk-text:#e7fbff; --rk-secondary:#8dbbc7; --rk-muted:#5c8796; --rk-green:#00f5ff; --rk-green-dark:#00b8d4; color-scheme:dark; }
+:root[data-preset="galaxy-purple"] { --rk-bg:#10051d; --rk-panel:#201035; --rk-header:#291545; --rk-input:#2c1745; --rk-border:#4b2a70; --rk-text:#f6eaff; --rk-secondary:#c0a4d8; --rk-muted:#9473b2; --rk-green:#b56bff; --rk-green-dark:#8c42d6; color-scheme:dark; }
+:root[data-preset="royal-gold"] { --rk-bg:#100d05; --rk-panel:#211a0a; --rk-header:#2a210d; --rk-input:#30250d; --rk-border:#58431b; --rk-text:#fff6d8; --rk-secondary:#d3c18d; --rk-muted:#9e8a56; --rk-green:#f4c453; --rk-green-dark:#c99a28; color-scheme:dark; }
+:root[data-preset="toxic-acid"] { --rk-bg:#080d03; --rk-panel:#18200a; --rk-header:#202c0c; --rk-input:#263510; --rk-border:#40551a; --rk-text:#f3ffd8; --rk-secondary:#b5ca83; --rk-muted:#839956; --rk-green:#c4ff00; --rk-green-dark:#8cb900; color-scheme:dark; }
+:root[data-preset="sunset-fire"] { --rk-bg:#170805; --rk-panel:#2b120b; --rk-header:#39180d; --rk-input:#401b0e; --rk-border:#6a2c18; --rk-text:#fff0e8; --rk-secondary:#d9a18b; --rk-muted:#a77865; --rk-green:#ff7043; --rk-green-dark:#df4b23; color-scheme:dark; }
+:root[data-preset="midnight"] { --rk-bg:#050914; --rk-panel:#101b31; --rk-header:#152542; --rk-input:#1a2945; --rk-border:#2d4166; --rk-text:#edf3ff; --rk-secondary:#a7b7d5; --rk-muted:#7186ad; --rk-green:#9bbcff; --rk-green-dark:#5d8fe5; color-scheme:dark; }
+:root[data-preset="pink-candy"] .chat-bg { background-color:#fff7fb; }
+:root[data-preset="sky-blue"] .chat-bg { background-color:#f4f9ff; }
+:root[data-preset="ruby-red"] .chat-bg { background-color:#fff6f6; }
+:root[data-preset="neon-cyber"] .chat-bg { background-color:#030b16; }
+:root[data-preset="galaxy-purple"] .chat-bg { background-color:#10051d; }
+:root[data-preset="royal-gold"] .chat-bg { background-color:#100d05; }
+:root[data-preset="toxic-acid"] .chat-bg { background-color:#080d03; }
+:root[data-preset="sunset-fire"] .chat-bg { background-color:#170805; }
+:root[data-preset="midnight"] .chat-bg { background-color:#050914; }
+
 * { box-sizing: border-box; }
 
 html, body {
