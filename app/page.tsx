@@ -9,7 +9,7 @@ import {
 import ProfileScreen from "./ProfileScreen";
 import GroupInfoScreen from "./GroupInfoScreen";
 
-type Message = { id: number; sender: string; text: string; time: string; isMe: boolean; isAdmin?: boolean; audioData?: string; attachmentData?: string; attachmentName?: string; attachmentType?: string; pollData?: { question: string; options: { text: string; votes: string[] }[] } };
+type Message = { id: number; sender: string; text: string; time: string; isMe: boolean; isAdmin?: boolean; audioData?: string; attachmentData?: string; attachmentName?: string; attachmentType?: string; pollData?: { question: string; options: { text: string; votes: string[] }[] }; sticker?: string };
 type Group = {
   id: number; name: string; description: string; members: number;
   lastMessage: string; time: string; unread: number;
@@ -63,6 +63,7 @@ export default function Home() {
   const [showSettings, setShowSettings] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
   const [showPollComposer, setShowPollComposer] = useState(false);
   const [pollQuestion, setPollQuestion] = useState("");
   const [pollOptions, setPollOptions] = useState(["", ""]);
@@ -247,6 +248,18 @@ export default function Home() {
       setShowAttachmentMenu(false);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleSendSticker = (sticker: string) => {
+    if (!selectedGroupId || !selectedGroup) return;
+    if (selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) {
+      alert("Somente administradores podem enviar mensagens neste grupo."); return;
+    }
+    const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    const message: Message = { id: Date.now(), sender: nickname, text: "Figurinha", time, isMe: true, sticker };
+    setMessages((prev) => ({ ...prev, [selectedGroupId]: [...(prev[selectedGroupId] || []), message] }));
+    setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, lastMessage: "Figurinha " + sticker, time, unread: 0, isJoined: true } : g));
+    setShowStickerPicker(false);
   };
 
   const handleCreatePoll = () => {
@@ -717,7 +730,11 @@ export default function Home() {
                         {msg.sender}{msg.isAdmin && <span className="text-wa-muted font-normal"> · Admin</span>}
                       </p>
                     )}
-                    {msg.pollData ? (
+                    {msg.sticker ? (
+                      <div className="flex items-center justify-center py-1 px-2" aria-label="Figurinha enviada">
+                        <span className="text-[76px] leading-none select-none" style={{ filter: "drop-shadow(0 2px 1px rgba(0,0,0,0.15))" }}>{msg.sticker}</span>
+                      </div>
+                    ) : msg.pollData ? (
                       <div className="min-w-[220px] space-y-2 py-1">
                         <p className="font-semibold text-[15px]">{msg.pollData.question}</p>
                         {msg.pollData.options.map((option, optionIndex) => {
@@ -752,7 +769,7 @@ export default function Home() {
 
             <div className="bg-[#f0f2f5] px-2 py-1.5 flex items-end gap-1.5 shrink-0">
               <div className="flex-1 flex items-center bg-white rounded-full px-2 py-1 min-h-[42px] shadow-sm">
-                <button className="text-wa-secondary p-1.5 shrink-0"><Smile size={24} /></button>
+                <button onClick={() => { setShowStickerPicker((open) => !open); setShowAttachmentMenu(false); }} aria-label="Abrir figurinhas" title="Figurinhas" className={`text-wa-secondary p-1.5 shrink-0 ${showStickerPicker ? "text-wa-green-dark" : ""}`}><Smile size={24} /></button>
                 <input
                   type="text"
                   value={inputText}
@@ -767,6 +784,25 @@ export default function Home() {
                 <input ref={audioInputRef} type="file" accept="audio/*" className="hidden" onChange={handleAttachmentSelected} />
                 <input ref={filesInputRef} type="file" className="hidden" onChange={handleAttachmentSelected} />
               </div>
+              {showStickerPicker && (
+                <>
+                  <button className="fixed inset-0 z-40 cursor-default" aria-label="Fechar figurinhas" onClick={() => setShowStickerPicker(false)} />
+                  <div className="absolute bottom-[66px] left-2 z-50 w-[min(320px,calc(100vw-24px))] rounded-xl bg-wa-panel border border-wa-border shadow-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="font-semibold text-sm text-wa-text">Figurinhas</p>
+                      <button onClick={() => setShowStickerPicker(false)} aria-label="Fechar figurinhas" className="text-wa-secondary"><X size={18} /></button>
+                    </div>
+                    <p className="text-xs text-wa-secondary mb-3">Toque em uma figurinha para enviar ao grupo.</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {["😂","🤣","😍","🥰","😭","😎","🤔","😱","🥳","🤡","💀","❤️","🔥","👍","👎","👏","🙏","🤝","👑","💯","🎮","🏆","🐉","💸"].map((sticker) => (
+                        <button key={sticker} onClick={() => handleSendSticker(sticker)} aria-label={`Enviar figurinha ${sticker}`} className="aspect-square rounded-lg flex items-center justify-center text-[32px] hover:bg-wa-hover active:scale-95 transition">
+                          {sticker}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
               {showAttachmentMenu && (
                 <>
                   <button className="fixed inset-0 z-40 cursor-default" aria-label="Fechar anexos" onClick={() => setShowAttachmentMenu(false)} />
