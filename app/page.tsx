@@ -59,6 +59,12 @@ export default function Home() {
   const [authBusy, setAuthBusy] = useState(false);
   const [authNotice, setAuthNotice] = useState("");
   const [publicUserId, setPublicUserId] = useState("");
+  const [searchedProfiles, setSearchedProfiles] = useState<{ id: string; public_id: number; nickname: string; avatar_url: string | null }[]>([]);
+  const [directChatUser, setDirectChatUser] = useState<{ id: string; public_id: number; nickname: string; avatar_url: string | null } | null>(null);
+  const [directConversationId, setDirectConversationId] = useState<string | null>(null);
+  const [directMessages, setDirectMessages] = useState<{ id: string; sender_id: string; content: string; created_at: string }[]>([]);
+  const [directMessageInput, setDirectMessageInput] = useState("");
+  const [directChatError, setDirectChatError] = useState("");
   const [screen, setScreen] = useState<"conversas" | "comunidades">("conversas");
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [groups, setGroups] = useState<Group[]>(DEFAULT_GROUPS);
@@ -154,6 +160,58 @@ export default function Home() {
         groupName: groups.find((g) => g.id === Number(groupId))?.name || "Grupo",
       })))
     .filter((user, index, users) => users.findIndex((item) => item.sender === user.sender) === index);
+
+  useEffect(() => {
+    let cancelled = false;
+    const query = userSearchQuery.trim();
+    if (!showUserSearch || !isSupabaseConfigured || !supabase || !/^\\d+$/.test(query)) {
+      setSearchedProfiles([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const { data, error } = await supabase!.from("profiles").select("id, public_id, nickname, avatar_url").eq("public_id", query).limit(1);
+      if (!cancelled) setSearchedProfiles(error ? [] : (data || []) as typeof searchedProfiles);
+    }, 250);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [userSearchQuery, showUserSearch]);
+
+  const openDirectChat = async (profile: { id: string; public_id: number; nickname: string; avatar_url: string | null }) => {
+    if (!supabase) { setDirectChatError("Configure o Supabase para iniciar conversas entre contas."); return; }
+    const { data: authData } = await supabase.auth.getUser();
+    const currentId = authData.user?.id;
+    if (!currentId) { setDirectChatError("Entre na sua conta para conversar."); return; }
+    if (profile.id === currentId) { setDirectChatError("Esse é o seu próprio perfil."); return; }
+    setDirectChatError("");
+    setDirectChatUser(profile);
+    const [user_a, user_b] = [currentId, profile.id].sort();
+    const { data: existing, error: findError } = await supabase.from("direct_conversations").select("id").eq("user_a", user_a).eq("user_b", user_b).maybeSingle();
+    if (findError) { setDirectChatError("Não consegui abrir a conversa. Confira se o SQL do Supabase foi executado."); return; }
+    let conversationId = existing?.id as string | undefined;
+    if (!conversationId) {
+      const { data: created, error: createError } = await supabase.from("direct_conversations").insert({ user_a, user_b }).select("id").single();
+      if (createError) {
+        const { data: retry } = await supabase.from("direct_conversations").select("id").eq("user_a", user_a).eq("user_b", user_b).maybeSingle();
+        if (!retry) { setDirectChatError("Não foi possível criar a conversa. Tente novamente."); return; }
+        conversationId = retry.id;
+      } else conversationId = created.id;
+    }
+    setDirectConversationId(conversationId || null);
+    if (!conversationId) return;
+    const { data: history, error: historyError } = await supabase.from("direct_messages").select("id, sender_id, content, created_at").eq("conversation_id", conversationId).order("created_at", { ascending: true });
+    if (historyError) setDirectChatError("Conversa aberta, mas não consegui carregar as mensagens.");
+    else setDirectMessages((history || []) as typeof directMessages);
+  };
+
+  const sendDirectMessage = async () => {
+    const content = directMessageInput.trim();
+    if (!content || !directConversationId || !supabase) return;
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return;
+    const { data, error } = await supabase.from("direct_messages").insert({ conversation_id: directConversationId, sender_id: authData.user.id, content }).select("id, sender_id, content, created_at").single();
+    if (error) { setDirectChatError("Não foi possível enviar a mensagem."); return; }
+    setDirectMessages((previous) => [...previous, data as typeof directMessages[number]]);
+    setDirectMessageInput("");
+  };
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [currentMessages]);
 
@@ -946,25 +1004,48 @@ export default function Home() {
             <div className="p-4">
               <div className="flex items-center gap-2 bg-wa-input rounded-lg px-3 py-2.5">
                 <Search size={18} className="text-wa-secondary" />
-                <input value={userSearchQuery} onChange={(e) => setUserSearchQuery(e.target.value)}
-                  placeholder="Digite o nickname..." className="bg-transparent outline-none text-sm w-full text-wa-text placeholder-wa-muted" autoFocus />
+                <input value={userSearchQuery} onChange={(e) => setUserSearchQuery(e.target.value.replace(/\\D/g, "").slice(0, 20))} inputMode="numeric" placeholder="Digite o ID numérico do usuário" className="bg-transparent outline-none text-sm w-full text-wa-text placeholder-wa-muted" autoFocus />
               </div>
-              <div className="mt-3 max-h-64 overflow-y-auto">
-                {userMatches.map((user) => (
-                  <div key={user.sender} className="flex items-center gap-3 py-3 border-b border-wa-border last:border-0">
-                    <div className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold">{user.sender.charAt(0).toUpperCase()}</div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-wa-text">{user.sender}</p>
-                      <p className="text-xs text-wa-secondary">Encontrado em {user.groupName}</p>
-                    </div>
-                  </div>
-                ))}
-                {userSearchQuery.trim() && userMatches.length === 0 && (
-                  <p className="text-sm text-wa-secondary text-center py-6">Nenhum usuário encontrado.</p>
-                )}
-                {!userSearchQuery.trim() && <p className="text-xs text-wa-secondary text-center py-4">Pesquise pelo nickname de alguém que já apareceu nas conversas.</p>}
-              </div>
+              {isSupabaseConfigured ? (
+                <div className="mt-3 max-h-64 overflow-y-auto">
+                  {searchedProfiles.map((user) => (
+                    <button key={user.id} onClick={() => openDirectChat(user)} className="w-full flex items-center gap-3 py-3 border-b border-wa-border last:border-0 text-left hover:bg-wa-hover rounded-lg px-2">
+                      {user.avatar_url ? <img src={user.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold">{user.nickname.charAt(0).toUpperCase()}</div>}
+                      <div className="min-w-0 flex-1"><p className="text-sm font-medium text-wa-text">{user.nickname}</p><p className="text-xs text-wa-secondary">ID: {user.public_id}</p></div>
+                      <MessageCircle size={18} className="text-wa-green" />
+                    </button>
+                  ))}
+                  {userSearchQuery.trim() && searchedProfiles.length === 0 && <p className="text-sm text-wa-secondary text-center py-6">Nenhuma conta encontrada com esse ID.</p>}
+                  {!userSearchQuery.trim() && <p className="text-xs text-wa-secondary text-center py-4">Peça o ID numérico do seu amigo e digite aqui para encontrá-lo.</p>}
+                </div>
+              ) : (
+                <p className="text-xs text-wa-secondary text-center py-5">A busca por ID será ativada quando as credenciais do Supabase estiverem configuradas.</p>
+              )}
             </div>
+          </div>
+        </div>
+      )}
+      {directChatUser && (
+        <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-3">
+          <div className="w-full max-w-lg h-[min(650px,90vh)] bg-wa-panel rounded-2xl overflow-hidden flex flex-col border border-wa-border shadow-xl">
+            <div className="flex items-center gap-3 px-4 py-3 bg-wa-header border-b border-wa-border">
+              <button onClick={() => { setDirectChatUser(null); setDirectConversationId(null); setDirectMessages([]); setDirectChatError(""); }} aria-label="Voltar" className="text-wa-secondary"><ArrowLeft size={22} /></button>
+              {directChatUser.avatar_url ? <img src={directChatUser.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" /> : <div className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold">{directChatUser.nickname.charAt(0).toUpperCase()}</div>}
+              <div className="min-w-0 flex-1"><p className="font-medium text-wa-text truncate">{directChatUser.nickname}</p><p className="text-xs text-wa-secondary">ID: {directChatUser.public_id}</p></div>
+              <button onClick={() => setDirectChatUser(null)} aria-label="Fechar conversa" className="text-wa-secondary"><X size={21} /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2 chat-bg">
+              {directMessages.map((msg) => {
+                const mine = msg.sender_id !== directChatUser.id;
+                return <div key={msg.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}><div className={`max-w-[82%] rounded-xl px-3 py-2 shadow-sm ${mine ? "bg-[#d9fdd3] text-[#17211d]" : "bg-white text-[#17211d]"}`}><p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p><p className="text-[10px] text-right opacity-60 mt-1">{new Date(msg.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p></div></div>;
+              })}
+              {!directMessages.length && <p className="text-center text-sm text-wa-secondary py-8">Essa conversa está vazia. Mande a primeira mensagem!</p>}
+              {directChatError && <p role="alert" className="text-sm text-red-500 text-center py-2">{directChatError}</p>}
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); void sendDirectMessage(); }} className="flex gap-2 p-3 border-t border-wa-border bg-wa-panel">
+              <input value={directMessageInput} onChange={(e) => setDirectMessageInput(e.target.value)} placeholder="Mensagem privada" className="flex-1 min-w-0 rounded-full bg-wa-input px-4 py-3 text-sm text-wa-text outline-none" />
+              <button type="submit" disabled={!directMessageInput.trim() || !directConversationId} aria-label="Enviar mensagem privada" className="bg-wa-green text-white rounded-full p-3 disabled:opacity-40"><Send size={19} /></button>
+            </form>
           </div>
         </div>
       )}
