@@ -21,6 +21,9 @@ type Props = {
 export default function ProfileScreen({ nickname, onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onToggleHideProfilePhoto, contactNames = [] }: Props) {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showAppearance, setShowAppearance] = useState(false);
+  const [themeColor, setThemeColor] = useState("green");
+  const [themeMode, setThemeMode] = useState<"light" | "dark">("dark");
   const [showAccount, setShowAccount] = useState(false);
   const [lastSeen, setLastSeen] = useState<"todos" | "ninguem">("todos");
   const [hiddenPhotoContacts, setHiddenPhotoContacts] = useState<string[]>([]);
@@ -44,13 +47,31 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
       localStorage.setItem("dff_default_duration", durationDays);
     } catch {}
   }, [lastSeen, hiddenPhotoContacts, durationDays]);
+  useEffect(() => {
+    try {
+      const savedColor = localStorage.getItem("dff_theme_color");
+      const savedMode = localStorage.getItem("dff_theme_mode");
+      if (savedColor && ["green", "pink", "blue", "red"].includes(savedColor)) setThemeColor(savedColor);
+      if (savedMode === "light" || savedMode === "dark") setThemeMode(savedMode);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = themeColor;
+    document.documentElement.dataset.mode = themeMode;
+    try {
+      localStorage.setItem("dff_theme_color", themeColor);
+      localStorage.setItem("dff_theme_mode", themeMode);
+    } catch {}
+  }, [themeColor, themeMode]);
+
   const [showSubscriptions, setShowSubscriptions] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"mensal" | "anual">("anual");
   const items = [
     { icon: Diamond, title: "Assinaturas", desc: "Conheça os benefícios premium" },
     { icon: KeyRound, title: "Conta", desc: "Gmail da conta e senha" },
     { icon: Lock, title: "Privacidade", desc: "Visto por último, foto de perfil e duração padrão" },
-    { icon: Paintbrush, title: "Aparência", desc: "Tema da conversa, ícone do app, tema do app" },
+    { icon: Paintbrush, title: "Aparência", desc: "Cores e modo claro ou escuro" },
     { icon: Bot, title: "Bots", desc: "Configurações de bots" },
     { icon: Palette, title: "Temas", desc: "Aparência personalizada" },
   ];
@@ -115,6 +136,7 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
                 if (item.title === "Assinaturas") { setShowSubscriptions(true); return; }
                 if (item.title === "Conta") { setShowAccount(true); return; }
                 if (item.title === "Privacidade") { setShowPrivacy(true); return; }
+                if (item.title === "Aparência") { setShowAppearance(true); return; }
                 if (item.title === "Bots" || item.title === "Temas") {
                   alert(`${item.title} — em breve você me fala como funciona`);
                 }
@@ -231,6 +253,49 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
               </button>
               <p className="text-center text-[11px] text-wa-muted mt-3">Você poderá escolher outro plano antes de assinar.</p>
             </div>
+          </div>
+        </div>
+      )}
+      {showAppearance && (
+        <div className="fixed inset-0 z-[66] bg-wa-bg flex flex-col">
+          <div className="bg-wa-panel px-3 py-3 flex items-center gap-3 border-b border-wa-border shrink-0">
+            <button onClick={() => setShowAppearance(false)} className="text-wa-secondary p-1" aria-label="Voltar às configurações"><ArrowLeft size={24} /></button>
+            <div><h2 className="text-lg font-semibold text-wa-text">Aparência</h2><p className="text-xs text-wa-secondary">Escolha as cores do Diários FF</p></div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-5">
+            <section>
+              <h3 className="text-sm font-semibold text-wa-text mb-3">Cor principal</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { id: "green", label: "Verde", color: "#20b873", light: "#ffffff", dark: "#07110c" },
+                  { id: "pink", label: "Rosa", color: themeMode === "dark" ? "#a83268" : "#f4a6c8", light: "#ffffff", dark: "#080608" },
+                  { id: "blue", label: "Azul", color: themeMode === "dark" ? "#2457a6" : "#8fc5ff", light: "#ffffff", dark: "#060a11" },
+                  { id: "red", label: "Vermelho", color: themeMode === "dark" ? "#a92732" : "#f3a0a5", light: "#ffffff", dark: "#100607" },
+                ].map((color) => (
+                  <button key={color.id} onClick={() => setThemeColor(color.id)} className={`rounded-xl border p-3 flex items-center gap-3 text-left ${themeColor === color.id ? "border-wa-green ring-2 ring-wa-green/30" : "border-wa-border"}`}>
+                    <span className="w-9 h-9 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: color.color }} />
+                    <span className="flex-1 text-sm font-medium text-wa-text">{color.label}</span>
+                    {themeColor === color.id && <Check size={18} className="text-wa-green" />}
+                  </button>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3 className="text-sm font-semibold text-wa-text mb-3">Modo de exibição</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => setThemeMode("light")} className={`rounded-xl border p-4 text-left ${themeMode === "light" ? "border-wa-green ring-2 ring-wa-green/30" : "border-wa-border"}`}>
+                  <span className="block w-full h-12 rounded-lg border border-gray-200 bg-white mb-3 p-2"><span className="block h-2 w-2/3 rounded bg-gray-200" /><span className="block h-2 w-1/2 rounded bg-gray-100 mt-2" /></span>
+                  <span className="text-sm font-medium text-wa-text">Claro</span>
+                  <span className="block text-xs text-wa-secondary mt-1">Fundo branco e cor suave</span>
+                </button>
+                <button onClick={() => setThemeMode("dark")} className={`rounded-xl border p-4 text-left ${themeMode === "dark" ? "border-wa-green ring-2 ring-wa-green/30" : "border-wa-border"}`}>
+                  <span className="block w-full h-12 rounded-lg border border-gray-700 bg-black mb-3 p-2"><span className="block h-2 w-2/3 rounded bg-gray-700" /><span className="block h-2 w-1/2 rounded bg-gray-800 mt-2" /></span>
+                  <span className="text-sm font-medium text-wa-text">Escuro</span>
+                  <span className="block text-xs text-wa-secondary mt-1">Fundo preto e cor mais escura</span>
+                </button>
+              </div>
+            </section>
+            <p className="text-xs text-wa-secondary">Sua escolha fica salva neste aparelho. No modo claro, as cores combinam com branco; no escuro, com preto e tons mais profundos.</p>
           </div>
         </div>
       )}
