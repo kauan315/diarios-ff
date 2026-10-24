@@ -42,7 +42,7 @@ type Group = {
   createdByMe?: boolean;
 };
 
-const initialGroups: Group[] = [
+const DEFAULT_GROUPS: Group[] = [
   {
     id: 1,
     name: "Diário Free Fire BR",
@@ -52,7 +52,7 @@ const initialGroups: Group[] = [
     time: "14:32",
     unread: 3,
     onlyAdminsCanSend: false,
-    isJoined: true,
+    isJoined: false,
   },
   {
     id: 2,
@@ -63,7 +63,7 @@ const initialGroups: Group[] = [
     time: "13:15",
     unread: 0,
     onlyAdminsCanSend: false,
-    isJoined: true,
+    isJoined: false,
   },
   {
     id: 3,
@@ -72,7 +72,7 @@ const initialGroups: Group[] = [
     members: 2100,
     lastMessage: "Melhor loadout da temporada",
     time: "11:48",
-    unread: 12,
+    unread: 0,
     onlyAdminsCanSend: false,
     isJoined: false,
   },
@@ -85,7 +85,7 @@ const initialGroups: Group[] = [
     time: "10:02",
     unread: 0,
     onlyAdminsCanSend: true,
-    isJoined: true,
+    isJoined: false,
   },
   {
     id: 5,
@@ -100,11 +100,10 @@ const initialGroups: Group[] = [
   },
 ];
 
-const initialMessages: Record<number, Message[]> = {
+const DEFAULT_MESSAGES: Record<number, Message[]> = {
   1: [
     { id: 1, sender: "Admin", text: "Bem-vindos ao grupo! Leiam as regras na descrição.", time: "10:00", isMe: false, isAdmin: true },
     { id: 2, sender: "Jogador123", text: "Alguém quer duo ranked?", time: "14:30", isMe: false },
-    { id: 3, sender: "Você", text: "Eu topo! Manda o ID", time: "14:32", isMe: true },
   ],
   2: [
     { id: 1, sender: "LíderOrg", text: "Procuro membros ativos pro clã. Rank Heroico+", time: "13:10", isMe: false, isAdmin: true },
@@ -122,31 +121,79 @@ const initialMessages: Record<number, Message[]> = {
   ],
 };
 
+function loadFromStorage<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveToStorage(key: string, value: unknown) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
 export default function Home() {
   const [nickname, setNickname] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [tempNickname, setTempNickname] = useState("");
   const [screen, setScreen] = useState<"conversas" | "comunidades">("conversas");
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [groups, setGroups] = useState<Group[]>(initialGroups);
-  const [messages, setMessages] = useState<Record<number, Message[]>>(initialMessages);
+  const [groups, setGroups] = useState<Group[]>(DEFAULT_GROUPS);
+  const [messages, setMessages] = useState<Record<number, Message[]>>(DEFAULT_MESSAGES);
   const [inputText, setInputText] = useState("");
   const [showGroupInfo, setShowGroupInfo] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
+  const [hydrated, setHydrated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Carrega dados salvos no navegador
+  useEffect(() => {
+    const savedNick = loadFromStorage<string>("dff_nickname", "");
+    const savedGroups = loadFromStorage<Group[]>("dff_groups", DEFAULT_GROUPS);
+    const savedMessages = loadFromStorage<Record<number, Message[]>>("dff_messages", DEFAULT_MESSAGES);
+
+    if (savedNick) {
+      setNickname(savedNick);
+      setIsLoggedIn(true);
+    }
+    setGroups(savedGroups);
+    setMessages(savedMessages);
+    setHydrated(true);
+  }, []);
+
+  // Salva sempre que mudar
+  useEffect(() => {
+    if (!hydrated) return;
+    saveToStorage("dff_nickname", nickname);
+    saveToStorage("dff_groups", groups);
+    saveToStorage("dff_messages", messages);
+  }, [nickname, groups, messages, hydrated]);
 
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) || null;
   const currentMessages = selectedGroupId ? messages[selectedGroupId] || [] : [];
 
-  const myChats = groups.filter(
-    (g) =>
-      g.isJoined &&
-      (g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        g.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const myChats = groups
+    .filter((g) => g.isJoined)
+    .filter(
+      (g) =>
+        g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        g.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      // Mais recentes primeiro (pelo horário simples)
+      return b.time.localeCompare(a.time);
+    });
 
   const allCommunities = groups.filter(
     (g) =>
@@ -160,8 +207,19 @@ export default function Home() {
 
   const handleLogin = () => {
     if (tempNickname.trim().length < 2) return;
-    setNickname(tempNickname.trim());
+    const nick = tempNickname.trim();
+    setNickname(nick);
     setIsLoggedIn(true);
+    saveToStorage("dff_nickname", nick);
+  };
+
+  const handleLogout = () => {
+    if (!confirm("Sair da conta? Seus grupos e mensagens ficam salvos neste aparelho.")) return;
+    setIsLoggedIn(false);
+    setNickname("");
+    setSelectedGroupId(null);
+    setShowSettings(false);
+    localStorage.removeItem("dff_nickname");
   };
 
   const handleSendMessage = () => {
@@ -171,11 +229,12 @@ export default function Home() {
       return;
     }
 
+    const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const newMessage: Message = {
       id: Date.now(),
       sender: nickname,
       text: inputText.trim(),
-      time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      time,
       isMe: true,
     };
 
@@ -187,7 +246,7 @@ export default function Home() {
     setGroups((prev) =>
       prev.map((g) =>
         g.id === selectedGroupId
-          ? { ...g, lastMessage: inputText.trim(), time: newMessage.time, unread: 0 }
+          ? { ...g, lastMessage: inputText.trim(), time, unread: 0, isJoined: true }
           : g
       )
     );
@@ -196,13 +255,19 @@ export default function Home() {
 
   const handleJoinGroup = (groupId: number) => {
     setGroups((prev) =>
-      prev.map((g) => (g.id === groupId ? { ...g, isJoined: true, unread: 0 } : g))
+      prev.map((g) =>
+        g.id === groupId ? { ...g, isJoined: true, unread: 0 } : g
+      )
     );
     setSelectedGroupId(groupId);
     setScreen("conversas");
+    setSearchQuery("");
   };
 
   const handleLeaveGroup = (groupId: number) => {
+    if (!confirm("Tem certeza que deseja sair deste grupo?\nEle sairá da sua lista de Conversas.")) {
+      return;
+    }
     setGroups((prev) =>
       prev.map((g) => (g.id === groupId ? { ...g, isJoined: false } : g))
     );
@@ -222,13 +287,14 @@ export default function Home() {
   const handleCreateGroup = () => {
     if (!newGroupName.trim()) return;
     const newId = Date.now();
+    const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const newGroup: Group = {
       id: newId,
       name: newGroupName.trim(),
       description: newGroupDesc.trim() || "Diário criado no Diários FF",
       members: 1,
       lastMessage: "Diário criado",
-      time: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      time,
       unread: 0,
       onlyAdminsCanSend: false,
       isJoined: true,
@@ -242,7 +308,7 @@ export default function Home() {
           id: 1,
           sender: nickname,
           text: `Diário "${newGroup.name}" criado por ${nickname}`,
-          time: newGroup.time,
+          time,
           isMe: true,
           isAdmin: true,
         },
@@ -257,19 +323,26 @@ export default function Home() {
 
   const showChat = selectedGroupId !== null && screen === "conversas";
 
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen bg-wa-bg flex items-center justify-center">
+        <div className="text-wa-secondary text-sm">Carregando...</div>
+      </div>
+    );
+  }
+
   // ===== LOGIN =====
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-wa-bg flex items-center justify-center p-4">
         <div className="w-full max-w-sm">
           <div className="text-center mb-10">
-            <div className="w-24 h-24 bg-wa-green rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg shadow-wa-green/20">
+            <div className="w-24 h-24 bg-wa-green rounded-full flex items-center justify-center mx-auto mb-5">
               <MessageCircle size={44} className="text-white" />
             </div>
-            <h1 className="text-3xl font-light text-wa-text tracking-wide">Diários FF</h1>
+            <h1 className="text-3xl font-light text-wa-text">Diários FF</h1>
             <p className="text-wa-secondary mt-2 text-sm">Chat e comunidades de Free Fire</p>
           </div>
-
           <div className="bg-wa-panel rounded-xl p-6 space-y-5">
             <div>
               <label className="text-xs text-wa-secondary mb-1.5 block uppercase tracking-wider">Nickname</label>
@@ -280,14 +353,14 @@ export default function Home() {
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                 placeholder="Seu nome no jogo"
                 maxLength={20}
-                className="w-full bg-wa-input rounded-lg px-4 py-3.5 text-wa-text outline-none placeholder-wa-muted focus:ring-1 focus:ring-wa-green transition"
+                className="w-full bg-wa-input rounded-lg px-4 py-3.5 text-wa-text outline-none placeholder-wa-muted focus:ring-1 focus:ring-wa-green"
                 autoFocus
               />
             </div>
             <button
               onClick={handleLogin}
               disabled={tempNickname.trim().length < 2}
-              className="w-full bg-wa-green text-white font-medium py-3.5 rounded-lg hover:bg-wa-green-dark transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full bg-wa-green text-white font-medium py-3.5 rounded-lg hover:bg-wa-green-dark transition disabled:opacity-40"
             >
               Entrar
             </button>
@@ -308,7 +381,7 @@ export default function Home() {
           </div>
           <button
             onClick={() => setShowCreateGroup(true)}
-            className="bg-wa-green text-white px-3.5 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 hover:bg-wa-green-dark transition"
+            className="bg-wa-green text-white px-3.5 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 hover:bg-wa-green-dark"
           >
             <Plus size={16} />
             Cadastrar
@@ -329,53 +402,46 @@ export default function Home() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-2.5 pb-24">
-          {allCommunities.length === 0 ? (
-            <div className="text-center py-20 text-wa-muted">
-              <Compass size={48} className="mx-auto mb-3 opacity-40" />
-              <p className="text-sm">Nenhum diário encontrado</p>
-            </div>
-          ) : (
-            allCommunities.map((group) => (
-              <div key={group.id} className="bg-wa-panel rounded-xl p-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-lg shrink-0">
-                    {group.name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-wa-text">{group.name}</h3>
-                    <p className="text-sm text-wa-secondary mt-0.5 line-clamp-2">{group.description}</p>
-                    <p className="text-xs text-wa-muted mt-1.5">
-                      {group.members.toLocaleString("pt-BR")} membros
-                      {group.onlyAdminsCanSend && " · Somente admins"}
-                    </p>
-                  </div>
+          {allCommunities.map((group) => (
+            <div key={group.id} className="bg-wa-panel rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-lg shrink-0">
+                  {group.name.charAt(0)}
                 </div>
-                <div className="mt-3">
-                  {group.isJoined ? (
-                    <button
-                      onClick={() => {
-                        setSelectedGroupId(group.id);
-                        setScreen("conversas");
-                      }}
-                      className="w-full bg-wa-header text-wa-text py-2 rounded-lg text-sm font-medium hover:bg-wa-hover transition"
-                    >
-                      Abrir conversa
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleJoinGroup(group.id)}
-                      className="w-full bg-wa-green text-white py-2 rounded-lg text-sm font-medium hover:bg-wa-green-dark transition"
-                    >
-                      Entrar no diário
-                    </button>
-                  )}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-wa-text">{group.name}</h3>
+                  <p className="text-sm text-wa-secondary mt-0.5 line-clamp-2">{group.description}</p>
+                  <p className="text-xs text-wa-muted mt-1.5">
+                    {group.members.toLocaleString("pt-BR")} membros
+                    {group.isJoined && <span className="text-wa-green"> · Você está neste grupo</span>}
+                  </p>
                 </div>
               </div>
-            ))
-          )}
+              <div className="mt-3">
+                {group.isJoined ? (
+                  <button
+                    onClick={() => {
+                      setSelectedGroupId(group.id);
+                      setScreen("conversas");
+                      setSearchQuery("");
+                    }}
+                    className="w-full bg-wa-header text-wa-text py-2 rounded-lg text-sm font-medium hover:bg-wa-hover"
+                  >
+                    Abrir conversa
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleJoinGroup(group.id)}
+                    className="w-full bg-wa-green text-white py-2 rounded-lg text-sm font-medium hover:bg-wa-green-dark"
+                  >
+                    Entrar no diário
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* Bottom nav */}
         <div className="fixed bottom-0 left-0 right-0 bg-wa-header border-t border-wa-border flex">
           <button
             onClick={() => {
@@ -383,7 +449,7 @@ export default function Home() {
               setSelectedGroupId(null);
               setSearchQuery("");
             }}
-            className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-secondary hover:text-wa-text transition"
+            className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-secondary"
           >
             <MessageCircle size={22} />
             <span className="text-[11px]">Conversas</span>
@@ -399,7 +465,7 @@ export default function Home() {
             <div className="bg-wa-panel w-full sm:max-w-md sm:rounded-xl overflow-hidden">
               <div className="bg-wa-header px-4 py-3 flex items-center justify-between">
                 <h2 className="text-base font-medium text-wa-text">Cadastrar diário</h2>
-                <button onClick={() => setShowCreateGroup(false)} className="text-wa-secondary hover:text-wa-text">
+                <button onClick={() => setShowCreateGroup(false)} className="text-wa-secondary">
                   <X size={22} />
                 </button>
               </div>
@@ -412,7 +478,7 @@ export default function Home() {
                     onChange={(e) => setNewGroupName(e.target.value)}
                     placeholder="Ex: Meu Clã Free Fire"
                     maxLength={40}
-                    className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none placeholder-wa-muted focus:ring-1 focus:ring-wa-green"
+                    className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none placeholder-wa-muted"
                     autoFocus
                   />
                 </div>
@@ -424,13 +490,13 @@ export default function Home() {
                     placeholder="Sobre o que é esse diário..."
                     rows={3}
                     maxLength={200}
-                    className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none placeholder-wa-muted focus:ring-1 focus:ring-wa-green resize-none"
+                    className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none placeholder-wa-muted resize-none"
                   />
                 </div>
                 <button
                   onClick={handleCreateGroup}
                   disabled={!newGroupName.trim()}
-                  className="w-full bg-wa-green text-white font-medium py-3 rounded-lg hover:bg-wa-green-dark transition disabled:opacity-40"
+                  className="w-full bg-wa-green text-white font-medium py-3 rounded-lg disabled:opacity-40"
                 >
                   Cadastrar diário
                 </button>
@@ -442,10 +508,9 @@ export default function Home() {
     );
   }
 
-  // ===== CONVERSAS (WhatsApp style) =====
+  // ===== CONVERSAS =====
   return (
     <div className="flex h-screen bg-wa-bg overflow-hidden">
-      {/* Sidebar */}
       <div className={`${showChat ? "hidden md:flex" : "flex"} w-full md:w-[400px] flex-col bg-wa-panel border-r border-wa-border`}>
         <div className="bg-wa-header px-4 py-2.5 flex items-center justify-between shrink-0 h-[60px]">
           <div className="flex items-center gap-3">
@@ -454,11 +519,13 @@ export default function Home() {
             </div>
             <span className="text-wa-text font-medium">{nickname}</span>
           </div>
-          <div className="flex items-center gap-5 text-wa-secondary">
-            <button className="hover:text-wa-text transition" title="Configurações">
-              <Settings size={20} />
-            </button>
-          </div>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="text-wa-secondary hover:text-wa-text"
+            title="Configurações"
+          >
+            <Settings size={20} />
+          </button>
         </div>
 
         <div className="px-3 py-2 bg-wa-panel shrink-0">
@@ -479,6 +546,7 @@ export default function Home() {
             <div className="p-10 text-center text-wa-muted">
               <MessageCircle size={40} className="mx-auto mb-3 opacity-30" />
               <p className="text-sm">Nenhuma conversa ainda</p>
+              <p className="text-xs mt-1">Entre em um diário nas Comunidades</p>
               <button
                 onClick={() => {
                   setScreen("comunidades");
@@ -486,7 +554,7 @@ export default function Home() {
                 }}
                 className="mt-3 text-wa-green text-sm hover:underline"
               >
-                Explorar Comunidades FF
+                Ir para Comunidades FF
               </button>
             </div>
           ) : (
@@ -497,7 +565,7 @@ export default function Home() {
                   setSelectedGroupId(group.id);
                   setShowGroupInfo(false);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-3 hover:bg-wa-hover transition text-left ${
+                className={`w-full flex items-center gap-3 px-3 py-3 hover:bg-wa-hover text-left ${
                   selectedGroupId === group.id ? "bg-wa-hover" : ""
                 }`}
               >
@@ -507,14 +575,14 @@ export default function Home() {
                 <div className="flex-1 min-w-0 border-b border-wa-border pb-3">
                   <div className="flex justify-between items-baseline">
                     <h3 className="font-medium text-wa-text truncate text-[15px]">{group.name}</h3>
-                    <span className={`text-[11px] shrink-0 ml-2 ${
-                      group.unread > 0 ? "text-wa-green" : "text-wa-muted"
-                    }`}>{group.time}</span>
+                    <span className={`text-[11px] shrink-0 ml-2 ${group.unread > 0 ? "text-wa-green" : "text-wa-muted"}`}>
+                      {group.time}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center mt-0.5">
                     <p className="text-[13px] text-wa-secondary truncate">{group.lastMessage}</p>
                     {group.unread > 0 && (
-                      <span className="bg-wa-green text-white text-[11px] font-medium rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shrink-0 ml-2">
+                      <span className="bg-wa-green text-white text-[11px] font-medium rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 ml-2">
                         {group.unread}
                       </span>
                     )}
@@ -525,7 +593,6 @@ export default function Home() {
           )}
         </div>
 
-        {/* Bottom nav mobile */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-wa-header border-t border-wa-border flex">
           <button className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-green">
             <MessageCircle size={22} />
@@ -537,7 +604,7 @@ export default function Home() {
               setSelectedGroupId(null);
               setSearchQuery("");
             }}
-            className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-secondary hover:text-wa-text transition"
+            className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-secondary"
           >
             <Users size={22} />
             <span className="text-[11px]">Comunidades</span>
@@ -545,12 +612,12 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Chat area */}
+      {/* Chat */}
       <div className={`${showChat ? "flex" : "hidden md:flex"} flex-1 flex-col relative bg-wa-bg`}>
         {selectedGroup ? (
           <>
             <div className="bg-wa-header px-3 md:px-4 h-[60px] flex items-center gap-3 shrink-0">
-              <button className="md:hidden text-wa-secondary hover:text-wa-text" onClick={() => setSelectedGroupId(null)}>
+              <button className="md:hidden text-wa-secondary" onClick={() => setSelectedGroupId(null)}>
                 <ArrowLeft size={24} />
               </button>
               <div
@@ -566,7 +633,7 @@ export default function Home() {
                   {selectedGroup.onlyAdminsCanSend && " · Somente admins"}
                 </p>
               </div>
-              <button className="text-wa-secondary hover:text-wa-text" onClick={() => setShowGroupInfo(true)}>
+              <button className="text-wa-secondary" onClick={() => setShowGroupInfo(true)}>
                 <MoreVertical size={20} />
               </button>
             </div>
@@ -579,11 +646,10 @@ export default function Home() {
                   </span>
                 </div>
               )}
-
               {currentMessages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`relative rounded-lg px-2.5 py-1.5 max-w-[85%] md:max-w-[65%] shadow-sm ${
+                    className={`rounded-lg px-2.5 py-1.5 max-w-[85%] md:max-w-[65%] ${
                       msg.isMe ? "bg-wa-bubble rounded-tr-none" : "bg-wa-incoming rounded-tl-none"
                     }`}
                   >
@@ -604,12 +670,8 @@ export default function Home() {
             </div>
 
             <div className="bg-wa-header px-2 md:px-3 py-2 flex items-center gap-2 shrink-0">
-              <button className="text-wa-secondary hover:text-wa-text p-1.5">
-                <Smile size={24} />
-              </button>
-              <button className="text-wa-secondary hover:text-wa-text p-1.5">
-                <Paperclip size={22} />
-              </button>
+              <button className="text-wa-secondary p-1.5"><Smile size={24} /></button>
+              <button className="text-wa-secondary p-1.5"><Paperclip size={22} /></button>
               <input
                 type="text"
                 value={inputText}
@@ -626,22 +688,20 @@ export default function Home() {
               <button
                 onClick={handleSendMessage}
                 disabled={!inputText.trim() || (selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe)}
-                className="bg-wa-green text-white p-2.5 rounded-full hover:bg-wa-green-dark transition disabled:opacity-40 disabled:cursor-not-allowed"
+                className="bg-wa-green text-white p-2.5 rounded-full disabled:opacity-40"
               >
                 <Send size={18} />
               </button>
             </div>
 
-            {/* Group info panel */}
             {showGroupInfo && (
               <div className="absolute inset-0 bg-wa-bg z-20 flex flex-col">
                 <div className="bg-wa-header px-4 h-[60px] flex items-center gap-4 shrink-0">
-                  <button onClick={() => setShowGroupInfo(false)} className="text-wa-secondary hover:text-wa-text">
+                  <button onClick={() => setShowGroupInfo(false)} className="text-wa-secondary">
                     <ArrowLeft size={24} />
                   </button>
                   <h2 className="text-base font-medium text-wa-text">Dados do grupo</h2>
                 </div>
-
                 <div className="flex-1 overflow-y-auto">
                   <div className="flex flex-col items-center py-8 bg-wa-panel">
                     <div className="w-32 h-32 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-5xl mb-4">
@@ -652,40 +712,37 @@ export default function Home() {
                       Grupo · {selectedGroup.members.toLocaleString("pt-BR")} participantes
                     </p>
                   </div>
-
                   <div className="px-4 py-4 bg-wa-panel mt-2">
                     <p className="text-xs text-wa-green mb-1">Descrição do grupo</p>
                     <p className="text-sm text-wa-text">{selectedGroup.description}</p>
                   </div>
-
                   <div className="mt-2 bg-wa-panel">
-                    <button onClick={toggleOnlyAdmins} className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover transition">
+                    <button onClick={toggleOnlyAdmins} className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover">
                       <Shield size={20} className="text-wa-secondary" />
                       <div className="flex-1 text-left">
                         <p className="text-[15px] text-wa-text">Somente admins podem enviar mensagens</p>
                         <p className="text-xs text-wa-secondary">{selectedGroup.onlyAdminsCanSend ? "Ativado" : "Desativado"}</p>
                       </div>
-                      <div className={`w-10 h-6 rounded-full relative transition ${selectedGroup.onlyAdminsCanSend ? "bg-wa-green" : "bg-wa-input"}`}>
+                      <div className={`w-10 h-6 rounded-full relative ${selectedGroup.onlyAdminsCanSend ? "bg-wa-green" : "bg-wa-input"}`}>
                         <div
-                          className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all shadow"
+                          className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all"
                           style={{ left: selectedGroup.onlyAdminsCanSend ? "18px" : "2px" }}
                         />
                       </div>
                     </button>
-                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover transition">
+                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover">
                       <UserPlus size={20} className="text-wa-secondary" />
                       <span className="text-[15px] text-wa-text">Adicionar participantes</span>
                     </button>
-                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover transition">
+                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover">
                       <Info size={20} className="text-wa-secondary" />
                       <span className="text-[15px] text-wa-text">Ver participantes</span>
                     </button>
                   </div>
-
                   <div className="mt-2 bg-wa-panel">
                     <button
                       onClick={() => handleLeaveGroup(selectedGroup.id)}
-                      className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover transition text-wa-danger"
+                      className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-wa-danger"
                     >
                       <LogOut size={20} />
                       <span className="text-[15px]">Sair do grupo</span>
@@ -703,12 +760,46 @@ export default function Home() {
               </div>
               <p className="text-xl font-light text-wa-text">Diários FF</p>
               <p className="text-sm mt-2 text-wa-secondary max-w-xs">
-                Envie e receba mensagens nos diários de Free Fire.
+                Selecione uma conversa ou vá em Comunidades para entrar em diários.
               </p>
             </div>
           </div>
         )}
       </div>
+
+      {/* Settings modal */}
+      {showSettings && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center">
+          <div className="bg-wa-panel w-full sm:max-w-md sm:rounded-xl overflow-hidden">
+            <div className="bg-wa-header px-4 py-3 flex items-center justify-between">
+              <h2 className="text-base font-medium text-wa-text">Configurações</h2>
+              <button onClick={() => setShowSettings(false)} className="text-wa-secondary">
+                <X size={22} />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-xl">
+                  {nickname.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-wa-text font-medium">{nickname}</p>
+                  <p className="text-xs text-wa-secondary">Seu nickname</p>
+                </div>
+              </div>
+              <div className="border-t border-wa-border pt-4">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 text-wa-danger py-3"
+                >
+                  <LogOut size={20} />
+                  <span>Sair da conta</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
