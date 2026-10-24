@@ -2,7 +2,7 @@
 
 import {
   ArrowLeft, Search, QrCode, Pencil, ChevronDown, Diamond,
-  KeyRound, Lock, MessageSquare, Paintbrush, Bot, Palette, LogOut, X, EyeOff,
+  KeyRound, Lock, MessageSquare, Bot, Palette, LogOut, X, EyeOff,
   Check, Crown, Sparkles, ShieldCheck, TrendingUp, Users, Zap, Star,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -21,7 +21,6 @@ type Props = {
 export default function ProfileScreen({ nickname, onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onToggleHideProfilePhoto, contactNames = [] }: Props) {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
-  const [showAppearance, setShowAppearance] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
   const [themePreset, setThemePreset] = useState("classic-green");
   const [themeLoaded, setThemeLoaded] = useState(false);
@@ -80,9 +79,8 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
     { icon: Diamond, title: "Assinaturas", desc: "Conheça os benefícios premium" },
     { icon: KeyRound, title: "Conta", desc: "Gmail da conta e senha" },
     { icon: Lock, title: "Privacidade", desc: "Visto por último, foto de perfil e duração padrão" },
-    { icon: Paintbrush, title: "Aparência", desc: "Cores e modo claro ou escuro" },
     { icon: Bot, title: "Bots", desc: "Configurações de bots" },
-    { icon: Palette, title: "Temas", desc: "Aparência personalizada" },
+    { icon: Palette, title: "Temas", desc: "Bolhas, fundos e estilos de conversa" },
   ];
 
   return (
@@ -145,7 +143,6 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
                 if (item.title === "Assinaturas") { setShowSubscriptions(true); return; }
                 if (item.title === "Conta") { setShowAccount(true); return; }
                 if (item.title === "Privacidade") { setShowPrivacy(true); return; }
-                if (item.title === "Aparência") { setShowAppearance(true); return; }
                 if (item.title === "Temas") { setShowThemes(true); return; }
                 if (item.title === "Bots") { alert("Bots — em breve"); }
               }}
@@ -261,108 +258,6 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
               </button>
               <p className="text-center text-[11px] text-wa-muted mt-3">Você poderá escolher outro plano antes de assinar.</p>
             </div>
-          </div>
-        </div>
-      )}
-      {showAppearance && (
-        <div className="fixed inset-0 z-[66] bg-wa-bg flex flex-col">
-          <div className="bg-wa-panel px-3 py-3 flex items-center gap-3 border-b border-wa-border shrink-0">
-            <button onClick={() => setShowAppearance(false)} className="text-wa-secondary p-1" aria-label="Voltar às configurações"><ArrowLeft size={24} /></button>
-            <div><h2 className="text-lg font-semibold text-wa-text">Aparência</h2><p className="text-xs text-wa-secondary">Escolha as cores do Diários FF</p></div>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-5">
-            <section>
-              <h3 className="text-sm font-semibold text-wa-text mb-3">Cor principal</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { id: "green", label: "Verde", color: "#20b873", light: "#ffffff", dark: "#07110c" },
-                  { id: "pink", label: "Rosa", color: themeMode === "dark" ? "#a83268" : "#f4a6c8", light: "#ffffff", dark: "#080608" },
-                  { id: "blue", label: "Azul", color: themeMode === "dark" ? "#2457a6" : "#8fc5ff", light: "#ffffff", dark: "#060a11" },
-                  { id: "red", label: "Vermelho", color: themeMode === "dark" ? "#a92732" : "#f3a0a5", light: "#ffffff", dark: "#100607" },
-                ].map((color) => (
-                  <button key={color.id} onClick={() => { setThemeColor(color.id); setThemePreset("classic-green"); }} className={`rounded-xl border p-3 flex items-center gap-3 text-left ${themeColor === color.id ? "border-wa-green ring-2 ring-wa-green/30" : "border-wa-border"}`}>
-                    <span className="w-9 h-9 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: color.color }} />
-                    <span className="flex-1 text-sm font-medium text-wa-text">{color.label}</span>
-                    {themeColor === color.id && <Check size={18} className="text-wa-green" />}
-                  </button>
-                ))}
-              </div>
-            </section>
-            <section>
-              <h3 className="text-sm font-semibold text-wa-text mb-3">Modo de exibição</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => setThemeMode("light")} className={`rounded-xl border p-4 text-left ${themeMode === "light" ? "border-wa-green ring-2 ring-wa-green/30" : "border-wa-border"}`}>
-                  <span className="block w-full h-12 rounded-lg border border-gray-200 bg-white mb-3 p-2"><span className="block h-2 w-2/3 rounded bg-gray-200" /><span className="block h-2 w-1/2 rounded bg-gray-100 mt-2" /></span>
-                  <span className="text-sm font-medium text-wa-text">Claro</span>
-                  <span className="block text-xs text-wa-secondary mt-1">Fundo branco e cor suave</span>
-                </button>
-                <button onClick={() => setThemeMode("dark")} className={`rounded-xl border p-4 text-left ${themeMode === "dark" ? "border-wa-green ring-2 ring-wa-green/30" : "border-wa-border"}`}>
-                  <span className="block w-full h-12 rounded-lg border border-gray-700 bg-black mb-3 p-2"><span className="block h-2 w-2/3 rounded bg-gray-700" /><span className="block h-2 w-1/2 rounded bg-gray-800 mt-2" /></span>
-                  <span className="text-sm font-medium text-wa-text">Escuro</span>
-                  <span className="block text-xs text-wa-secondary mt-1">Fundo preto e cor mais escura</span>
-                </button>
-              </div>
-            </section>
-            <p className="text-xs text-wa-secondary">Sua escolha fica salva neste aparelho. No modo claro, as cores combinam com branco; no escuro, com preto e tons mais profundos.</p>
-          </div>
-        </div>
-      )}
-      {showThemes && (
-        <div className="fixed inset-0 z-[68] bg-wa-bg flex flex-col">
-          <div className="bg-wa-panel px-3 py-3 flex items-center gap-3 border-b border-wa-border shrink-0">
-            <button onClick={() => setShowThemes(false)} className="text-wa-secondary p-1" aria-label="Voltar às configurações"><ArrowLeft size={24} /></button>
-            <div className="flex-1"><h2 className="text-lg font-semibold text-wa-text">Temas</h2><p className="text-xs text-wa-secondary">Personalize o Diários FF como no WhatsApp GB</p></div>
-            <Palette size={22} className="text-wa-green" />
-          </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            <section>
-              <div className="flex items-center justify-between mb-3"><h3 className="font-semibold text-wa-text">Temas gratuitos</h3><span className="text-[11px] rounded-full bg-emerald-500/15 text-emerald-500 px-2.5 py-1">GRÁTIS</span></div>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { id: "classic-green", name: "Clássico Verde", desc: "O visual original", accent: "#20b873", bg: "#101a15", panel: "#17251e" },
-                  { id: "pink-candy", name: "Rosa Candy", desc: "Rosa suave e branco", accent: "#f09bc2", bg: "#fff7fb", panel: "#ffffff" },
-                  { id: "sky-blue", name: "Azul Céu", desc: "Azul leve e limpo", accent: "#80baff", bg: "#f4f9ff", panel: "#ffffff" },
-                  { id: "ruby-red", name: "Ruby", desc: "Vermelho elegante", accent: "#ed858c", bg: "#fff6f6", panel: "#ffffff" },
-                ].map((theme) => (
-                  <button key={theme.id} onClick={() => { setThemePreset(theme.id); if (theme.id === "classic-green") { setThemeColor("green"); setThemeMode("dark"); } else if (theme.id === "pink-candy") { setThemeColor("pink"); setThemeMode("light"); } else if (theme.id === "sky-blue") { setThemeColor("blue"); setThemeMode("light"); } else { setThemeColor("red"); setThemeMode("light"); } }} className={`rounded-2xl border p-2.5 text-left transition ${themePreset === theme.id ? "border-wa-green ring-2 ring-wa-green/30" : "border-wa-border"}`}>
-                    <div className="h-24 rounded-xl overflow-hidden border border-black/10 mb-2.5" style={{ backgroundColor: theme.bg }}>
-                      <div className="h-5 flex items-center gap-1 px-2" style={{ backgroundColor: theme.panel }}><span className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.accent }} /><span className="w-10 h-1.5 rounded-full" style={{ backgroundColor: theme.accent, opacity: .65 }} /></div>
-                      <div className="p-2 space-y-2"><div className="w-3/4 h-4 rounded-lg rounded-tl-none" style={{ backgroundColor: theme.panel }} /><div className="ml-auto w-2/3 h-4 rounded-lg rounded-tr-none" style={{ backgroundColor: theme.accent, opacity: .8 }} /><div className="w-1/2 h-3 rounded-lg" style={{ backgroundColor: theme.panel }} /></div>
-                    </div>
-                    <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: theme.accent }} /><span className="text-sm font-semibold text-wa-text">{theme.name}</span>{themePreset === theme.id && <Check size={14} className="text-wa-green ml-auto" />}</div>
-                    <p className="text-[11px] text-wa-secondary mt-1">{theme.desc}</p>
-                  </button>
-                ))}
-              </div>
-            </section>
-            <section>
-              <div className="flex items-center justify-between mb-3"><h3 className="font-semibold text-wa-text">Temas Premium</h3><span className="text-[11px] rounded-full bg-amber-500/15 text-amber-500 px-2.5 py-1 flex items-center gap-1"><Crown size={12} /> EXCLUSIVOS</span></div>
-              <p className="text-xs text-wa-secondary mb-3">Temas com cores intensas e visuais especiais para assinantes Premium.</p>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { id: "neon-cyber", name: "Neon Cyber", desc: "Ciano elétrico e preto", accent: "#00f5ff", bg: "#030b16", panel: "#0b1830" },
-                  { id: "galaxy-purple", name: "Galaxy Roxo", desc: "Roxo cósmico", accent: "#b56bff", bg: "#10051d", panel: "#201035" },
-                  { id: "royal-gold", name: "Ouro Real", desc: "Preto e dourado", accent: "#f4c453", bg: "#100d05", panel: "#211a0a" },
-                  { id: "toxic-acid", name: "Toxic Acid", desc: "Verde ácido e carvão", accent: "#c4ff00", bg: "#080d03", panel: "#18200a" },
-                  { id: "sunset-fire", name: "Sunset Fire", desc: "Laranja incandescente", accent: "#ff7043", bg: "#170805", panel: "#2b120b" },
-                  { id: "midnight", name: "Midnight", desc: "Azul profundo e prata", accent: "#9bbcff", bg: "#050914", panel: "#101b31" },
-                ].map((theme) => (
-                  <button key={theme.id} onClick={() => alert("Este tema é exclusivo do Premium. A assinatura ainda precisa ser conectada ao sistema de pagamento para confirmar o acesso.")} className="rounded-2xl border border-amber-500/30 bg-wa-panel p-2.5 text-left relative overflow-hidden">
-                    <div className="absolute top-3 right-3 z-10 rounded-full bg-black/70 text-amber-300 p-1.5"><Lock size={13} /></div>
-                    <div className="h-24 rounded-xl overflow-hidden border border-white/10 mb-2.5" style={{ backgroundColor: theme.bg }}>
-                      <div className="h-5 flex items-center gap-1 px-2" style={{ backgroundColor: theme.panel }}><span className="w-2 h-2 rounded-full" style={{ backgroundColor: theme.accent, boxShadow: `0 0 8px ${theme.accent}` }} /><span className="w-10 h-1.5 rounded-full" style={{ backgroundColor: theme.accent, opacity: .75, boxShadow: `0 0 8px ${theme.accent}` }} /></div>
-                      <div className="p-2 space-y-2"><div className="w-3/4 h-4 rounded-lg rounded-tl-none" style={{ backgroundColor: theme.panel }} /><div className="ml-auto w-2/3 h-4 rounded-lg rounded-tr-none" style={{ backgroundColor: theme.accent, opacity: .85, boxShadow: `0 0 12px ${theme.accent}55` }} /><div className="w-1/2 h-3 rounded-lg" style={{ backgroundColor: theme.panel }} /></div>
-                    </div>
-                    <div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: theme.accent, boxShadow: `0 0 7px ${theme.accent}` }} /><span className="text-sm font-semibold text-wa-text">{theme.name}</span></div>
-                    <p className="text-[11px] text-wa-secondary mt-1">{theme.desc}</p>
-                    <p className="text-[10px] text-amber-500 mt-2 flex items-center gap-1"><Lock size={11} /> Exclusivo Premium</p>
-                  </button>
-                ))}
-              </div>
-              <button onClick={() => { setShowThemes(false); setShowSubscriptions(true); }} className="w-full mt-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold py-3"><Crown size={17} className="inline mr-2" />Conhecer o Premium</button>
-              <p className="text-[10px] text-wa-muted text-center mt-2">O acesso Premium só poderá ser confirmado quando o sistema de assinatura estiver integrado.</p>
-            </section>
-            <p className="text-xs text-wa-secondary">Os temas gratuitos são aplicados imediatamente e ficam salvos neste aparelho. Os temas Premium aparecem bloqueados até a assinatura ser validada.</p>
           </div>
         </div>
       )}
