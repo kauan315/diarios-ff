@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ArrowLeft, Search, QrCode, Pencil, ChevronDown, Diamond,
+  ArrowLeft, Pencil, ChevronDown, Diamond,
   KeyRound, Lock, MessageSquare, Bot, Palette, LogOut, X, EyeOff,
   Check, Crown, Sparkles, ShieldCheck, TrendingUp, Users, Zap, Star,
 } from "lucide-react";
@@ -93,8 +93,6 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
           <ArrowLeft size={24} />
         </button>
         <div className="flex items-center gap-4 text-wa-secondary">
-          <button className="p-1"><Search size={22} /></button>
-          <button className="p-1"><QrCode size={22} /></button>
           <button onClick={() => { setDraftNickname(nickname); setShowEditProfile(true); }} className="p-1" aria-label="Editar perfil"><Pencil size={20} /></button>
         </div>
       </div>
@@ -102,10 +100,7 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
       <div className="flex-1 overflow-y-auto">
         <div className="bg-wa-panel pb-6 pt-2">
           <div className="relative flex flex-col items-center">
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-white text-wa-text text-xs px-3 py-1 rounded-full shadow-sm border border-wa-border z-10 whitespace-nowrap">
-              Como está seu humor?
-            </div>
-            <div className="w-28 h-28 rounded-full bg-wa-green overflow-hidden flex items-center justify-center text-white font-semibold text-4xl mt-6 mb-3 shadow-md">
+            <div className="w-28 h-28 rounded-full bg-wa-green overflow-hidden flex items-center justify-center text-white font-semibold text-4xl mt-4 mb-3 shadow-md">
               {profilePhoto ? <img src={profilePhoto} alt="Foto de perfil" className="w-full h-full object-cover" /> : nickname.charAt(0).toUpperCase()}
             </div>
             <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={(event) => {
