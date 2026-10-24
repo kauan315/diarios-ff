@@ -242,7 +242,7 @@ export default function Home() {
     setNickname(nick); setIsLoggedIn(true); saveToStorage("dff_nickname", nick);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (!confirm("Sair da conta? Seus grupos e mensagens ficam salvos neste aparelho.")) return;
     if (isSupabaseConfigured && supabase) await supabase.auth.signOut();
     setIsLoggedIn(false); setNickname(""); setPublicUserId(""); setSelectedGroupId(null); setShowSettings(false);
