@@ -148,7 +148,7 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
             <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={(event) => {
               const file = event.target.files?.[0];
               if (!file) return;
-              if (!file.type.startsWith("image/")) { alert("Escolha um arquivo de imagem."); return; }
+              if (!file.type.startsWith("image/")) { console.info("Escolha um arquivo de imagem."); return; }
               const reader = new FileReader();
               reader.onload = () => {
                 const image = new Image();
@@ -184,7 +184,7 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
                 if (item.title === "Conta") { setShowAccount(true); return; }
                 if (item.title === "Privacidade") { setShowPrivacy(true); return; }
                 if (item.title === "Temas") { setShowThemes(true); return; }
-                if (item.title === "Bots") { alert("Bots — em breve"); }
+                if (item.title === "Bots") { console.info("Bots — em breve"); }
               }}
               className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left"
             >
@@ -232,7 +232,7 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
             <p className="text-xs text-wa-secondary mt-2">Máximo de 30 caracteres.</p>
             <button onClick={() => {
               const cleaned = draftNickname.trim();
-              if (!cleaned) { alert("Digite um nome para o perfil."); return; }
+              if (!cleaned) { console.info("Digite um nome para o perfil."); return; }
               onNicknameChange(cleaned);
               setShowEditProfile(false);
             }} className="w-full mt-6 rounded-xl bg-wa-green text-white font-semibold py-3.5">
@@ -353,7 +353,7 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
                 ))}
               </div>
               <p className="text-[11px] text-wa-muted mt-5 leading-relaxed">O selo Premium identifica assinantes; ele não representa, por si só, verificação de identidade. A assinatura e os pagamentos ainda precisam ser conectados ao sistema de cobrança para serem ativados.</p>
-              <button onClick={() => alert("A tela de planos já está pronta, mas o pagamento ainda precisa ser integrado para ativar a assinatura.")} className="w-full mt-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold py-3.5 shadow-md shadow-amber-500/20">
+              <button onClick={() => console.info("A tela de planos já está pronta, mas o pagamento ainda precisa ser integrado para ativar a assinatura.")} className="w-full mt-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold py-3.5 shadow-md shadow-amber-500/20">
                 Assinar Premium · {selectedPlan === "mensal" ? "R$ 9,90/mês" : "R$ 79,90/ano"}
               </button>
               <p className="text-center text-[11px] text-wa-muted mt-3">Você poderá escolher outro plano antes de assinar.</p>
@@ -467,7 +467,7 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
                 { id: "sunset-fire", name: "Sunset Fire", color: "#ff7849", bg: "linear-gradient(135deg,#351018,#822e25)" },
                 { id: "midnight", name: "Midnight", color: "#8ab4f8", bg: "linear-gradient(135deg,#101827,#283b55)" },
               ].map((theme) => (
-                <button key={theme.id} onClick={() => alert("Este tema é exclusivo do Premium. A integração de pagamento ainda precisa ser feita para desbloqueá-lo.")} className="rounded-2xl border border-wa-border bg-wa-panel p-3 text-left">
+                <button key={theme.id} onClick={() => console.info("Este tema é exclusivo do Premium. A integração de pagamento ainda precisa ser feita para desbloqueá-lo.")} className="rounded-2xl border border-wa-border bg-wa-panel p-3 text-left">
                   <div className="rounded-xl p-2.5 space-y-2 mb-2" style={{ background: theme.bg }}>
                     <div className="h-5 w-3/4 rounded-lg bg-white/20 border border-white/10" />
                     <div className="ml-auto h-6 w-4/5 rounded-[10px] border" style={{ background: theme.color, borderColor: theme.color, boxShadow: `0 0 10px ${theme.color}55` }} />
