@@ -57,6 +57,7 @@ export default function Home() {
   const [messages, setMessages] = useState<Record<number, Message[]>>(DEFAULT_MESSAGES);
   const [inputText, setInputText] = useState("");
   const [showGroupInfo, setShowGroupInfo] = useState(false);
+  const [photoPreviewGroup, setPhotoPreviewGroup] = useState<Group | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
@@ -411,7 +412,7 @@ export default function Home() {
           ) : myChats.map((group) => (
             <button key={group.id} onClick={() => { setSelectedGroupId(group.id); setShowGroupInfo(false); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-wa-hover text-left ${selectedGroupId === group.id ? "bg-wa-hover" : ""}`}>
-              <div className="w-[52px] h-[52px] rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-xl shrink-0 overflow-hidden">
+              <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPhotoPreviewGroup(group); }} className="w-[52px] h-[52px] rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-xl shrink-0 overflow-hidden cursor-pointer">
                 {group.photo ? <img src={group.photo} alt={group.name} className="w-full h-full object-cover" /> : group.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0 py-1 border-b border-wa-border">
@@ -489,7 +490,8 @@ export default function Home() {
               </button>
               <div
                 className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold cursor-pointer shrink-0 overflow-hidden"
-                onClick={() => setShowGroupInfo(true)}
+                onClick={() => setPhotoPreviewGroup(selectedGroup)}
+                title="Ver foto do grupo"
               >
                 {selectedGroup.photo ? <img src={selectedGroup.photo} alt={selectedGroup.name} className="w-full h-full object-cover" /> : selectedGroup.name.charAt(0)}
               </div>
@@ -589,6 +591,23 @@ export default function Home() {
         )}
       </div>
 
+      {photoPreviewGroup && (
+        <div className="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center p-5" onClick={() => setPhotoPreviewGroup(null)}>
+          <button aria-label="Fechar foto" onClick={() => setPhotoPreviewGroup(null)} className="absolute top-4 right-4 text-white p-2">
+            <X size={28} />
+          </button>
+          <div className="flex flex-col items-center gap-4 max-w-full" onClick={(e) => e.stopPropagation()}>
+            <p className="text-white text-lg font-medium">{photoPreviewGroup.name}</p>
+            {photoPreviewGroup.photo ? (
+              <img src={photoPreviewGroup.photo} alt={`Foto de ${photoPreviewGroup.name}`} className="max-w-[min(85vw,480px)] max-h-[70vh] object-contain rounded-md" />
+            ) : (
+              <div className="w-56 h-56 rounded-full bg-wa-green flex items-center justify-center text-white text-8xl font-semibold">
+                {photoPreviewGroup.name.charAt(0)}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {showUserSearch && (
         <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
           <div className="bg-wa-panel w-full max-w-md rounded-xl overflow-hidden shadow-xl">
