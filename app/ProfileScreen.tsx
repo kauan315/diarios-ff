@@ -2,7 +2,7 @@
 
 import {
   ArrowLeft, Search, QrCode, Pencil, ChevronDown, Diamond,
-  KeyRound, Lock, MessageSquare, Paintbrush, Bot, Palette, LogOut, Camera, ImagePlus, X, EyeOff,
+  KeyRound, Lock, MessageSquare, Paintbrush, Bot, Palette, LogOut, X, EyeOff,
 } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -51,6 +51,29 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
             <button onClick={() => photoInputRef.current?.click()} className="w-28 h-28 rounded-full bg-wa-green overflow-hidden flex items-center justify-center text-white font-semibold text-4xl mt-6 mb-3 shadow-md" aria-label="Escolher foto de perfil">
               {profilePhoto ? <img src={profilePhoto} alt="Foto de perfil" className="w-full h-full object-cover" /> : nickname.charAt(0).toUpperCase()}
             </button>
+            <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+              if (!file.type.startsWith("image/")) { alert("Escolha um arquivo de imagem."); return; }
+              const reader = new FileReader();
+              reader.onload = () => {
+                const image = new Image();
+                image.onload = () => {
+                  const canvas = document.createElement("canvas");
+                  const scale = Math.min(1, 512 / Math.max(image.width, image.height));
+                  canvas.width = Math.max(1, Math.round(image.width * scale));
+                  canvas.height = Math.max(1, Math.round(image.height * scale));
+                  const context = canvas.getContext("2d");
+                  if (!context) return;
+                  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                  onProfilePhotoChange(canvas.toDataURL("image/jpeg", 0.78));
+                };
+                image.src = String(reader.result);
+              };
+              reader.readAsDataURL(file);
+              event.target.value = "";
+            }} />
+            <p className="text-xs text-wa-secondary -mt-1 mb-2">Toque na foto para alterar</p>
             <button className="flex items-center gap-1 text-wa-text text-xl font-medium">
               {nickname}
               <ChevronDown size={18} className="text-wa-secondary" />
