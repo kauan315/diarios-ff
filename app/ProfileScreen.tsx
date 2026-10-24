@@ -171,7 +171,7 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
               {nickname}
               <ChevronDown size={18} className="text-wa-secondary" />
             </button>
-            {publicUserId && <button onClick={() => { navigator.clipboard?.writeText(publicUserId).then(() => alert("ID copiado!")).catch(() => alert("Seu ID: " + publicUserId)); }} className="mt-1 inline-flex items-center gap-2 text-sm text-wa-secondary" aria-label="Copiar meu ID"><span className="text-base font-semibold tracking-wide text-wa-text tabular-nums">{publicUserId}</span><Copy size={15} /></button>}
+            {publicUserId && <button onClick={() => { navigator.clipboard?.writeText(publicUserId).catch(() => {}); }} className="mt-1 inline-flex items-center gap-2 text-sm text-wa-secondary" aria-label="Copiar meu ID"><span className="text-base font-semibold tracking-wide text-wa-text tabular-nums">{publicUserId}</span><Copy size={15} /></button>}
           </div>
         </div>
 
@@ -259,7 +259,7 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
             <p className="mt-2 text-sm font-medium text-wa-text">{nickname}</p>
             {publicUserId ? (
               <button
-                onClick={() => { navigator.clipboard?.writeText(publicUserId).then(() => alert("ID copiado!")).catch(() => alert("Seu ID: " + publicUserId)); }}
+                onClick={() => { navigator.clipboard?.writeText(publicUserId).catch(() => {}); }}
                 className="mt-1 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-wa-secondary hover:bg-wa-hover"
                 aria-label="Copiar ID da conta"
               >
