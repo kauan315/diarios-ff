@@ -46,7 +46,6 @@ body {
 .bg-wa-input { background-color: var(--rk-input) !important; }
 .bg-wa-hover:hover { background-color: #1c2922 !important; }
 .bg-wa-green { background-color: var(--rk-green) !important; }
-.hover\\:bg-wa-green-dark:hover { background-color: var(--rk-green-dark) !important; }
 .text-wa-text { color: var(--rk-text) !important; }
 .text-wa-secondary { color: var(--rk-secondary) !important; }
 .text-wa-muted { color: var(--rk-muted) !important; }
@@ -83,7 +82,6 @@ input:focus-visible, textarea:focus-visible, button:focus-visible {
   box-shadow: 0 6px 18px rgba(57, 217, 138, .12);
 }
 .bg-wa-green.text-white:hover { filter: brightness(1.05); }
-.fixed.inset-0.bg-black\\/50 { backdrop-filter: blur(8px); }
 
 .chat-bg {
   background-color: #0d1511;
