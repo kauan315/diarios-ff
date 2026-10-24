@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ArrowLeft, Pencil, ChevronDown, Diamond,
+  ArrowLeft, Pencil, ChevronDown, Diamond, Copy,
   KeyRound, Lock, MessageSquare, Bot, Palette, LogOut, X, EyeOff,
   Check, Crown, Sparkles, ShieldCheck, TrendingUp, Users, Zap, Star,
 } from "lucide-react";
@@ -171,7 +171,7 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
               {nickname}
               <ChevronDown size={18} className="text-wa-secondary" />
             </button>
-            {publicUserId && <button onClick={() => { navigator.clipboard?.writeText(publicUserId).then(() => alert("ID copiado!")).catch(() => alert("Seu ID: " + publicUserId)); }} className="mt-1 text-xs text-wa-secondary">Meu ID: {publicUserId} · tocar para copiar</button>}
+            {publicUserId && <button onClick={() => { navigator.clipboard?.writeText(publicUserId).then(() => alert("ID copiado!")).catch(() => alert("Seu ID: " + publicUserId)); }} className="mt-1 inline-flex items-center gap-2 text-sm text-wa-secondary" aria-label="Copiar meu ID"><span className="text-base font-semibold tracking-wide text-wa-text tabular-nums">{publicUserId}</span><Copy size={15} /></button>}
           </div>
         </div>
 
@@ -260,10 +260,11 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
             {publicUserId ? (
               <button
                 onClick={() => { navigator.clipboard?.writeText(publicUserId).then(() => alert("ID copiado!")).catch(() => alert("Seu ID: " + publicUserId)); }}
-                className="mt-1 rounded-full px-3 py-1.5 text-sm text-wa-secondary hover:bg-wa-hover"
+                className="mt-1 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm text-wa-secondary hover:bg-wa-hover"
                 aria-label="Copiar ID da conta"
               >
-                ID: {publicUserId} · tocar para copiar
+                <span className="text-base font-semibold tracking-wide text-wa-text tabular-nums">{publicUserId}</span>
+                <Copy size={15} />
               </button>
             ) : (
               <p className="mt-1 text-xs text-wa-secondary">ID ainda não carregado</p>
