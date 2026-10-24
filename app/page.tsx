@@ -19,24 +19,15 @@ type Group = {
   photo?: string; memberNames?: string[]; isCommunity?: boolean; isPublic?: boolean; isFavorite?: boolean;
 };
 
-const DEFAULT_GROUPS: Group[] = [
-  { id: 1, name: "Diário Free Fire BR", description: "Comunidade principal de diários do Free Fire Brasil.", members: 1240, lastMessage: "Alguém upou o rank hoje?", time: "14:32", unread: 3, onlyAdminsCanSend: false, isJoined: false },
-  { id: 2, name: "Clãs e Organizações", description: "Encontre e entre em clãs.", members: 890, lastMessage: "Procuro membros ativos", time: "13:15", unread: 0, onlyAdminsCanSend: false, isJoined: false },
-  { id: 3, name: "Dicas e Estratégias", description: "Compartilhe dicas de gameplay.", members: 2100, lastMessage: "Melhor loadout da temporada", time: "11:48", unread: 0, onlyAdminsCanSend: false, isJoined: false },
-  { id: 4, name: "Diário Ranked Elite", description: "Só jogadores Elite e acima.", members: 456, lastMessage: "Somente admins podem enviar mensagens", time: "10:02", unread: 0, onlyAdminsCanSend: true, isJoined: false },
-  { id: 5, name: "Free Fire Latinoamérica", description: "Comunidad de Free Fire Latinoamérica", members: 3200, lastMessage: "¿Alguien para ranked?", time: "09:45", unread: 0, onlyAdminsCanSend: false, isJoined: false },
-];
-
-const DEFAULT_MESSAGES: Record<number, Message[]> = {
-  1: [
-    { id: 1, sender: "Admin", text: "Bem-vindos ao grupo! Leiam as regras.", time: "10:00", isMe: false, isAdmin: true },
-    { id: 2, sender: "Jogador123", text: "Alguém quer duo ranked?", time: "14:30", isMe: false },
-  ],
-  2: [{ id: 1, sender: "LíderOrg", text: "Procuro membros ativos pro clã.", time: "13:10", isMe: false, isAdmin: true }],
-  3: [{ id: 1, sender: "ProPlayer", text: "Melhor loadout: MP40 + Desert", time: "11:40", isMe: false }],
-  4: [{ id: 1, sender: "Admin Elite", text: "Somente administradores podem enviar mensagens.", time: "09:00", isMe: false, isAdmin: true }],
-  5: [{ id: 1, sender: "Admin", text: "Bienvenidos!", time: "09:00", isMe: false, isAdmin: true }],
-};
+const DEFAULT_GROUPS: Group[] = [];
+const DEFAULT_MESSAGES: Record<number, Message[]> = {};
+const SAMPLE_GROUP_NAMES = new Set([
+  "Diário Free Fire BR",
+  "Clãs e Organizações",
+  "Dicas e Estratégias",
+  "Diário Ranked Elite",
+  "Free Fire Latinoamérica",
+]);
 
 function loadFromStorage<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -134,8 +125,15 @@ export default function Home() {
     const savedNick = loadFromStorage<string>("dff_nickname", "");
     const savedProfilePhoto = loadFromStorage<string>("dff_profile_photo", "");
     const savedHideProfilePhoto = loadFromStorage<boolean>("dff_hide_profile_photo", false);
-    const savedGroups = loadFromStorage<Group[]>("dff_groups", DEFAULT_GROUPS);
-    const savedMessages = loadFromStorage<Record<number, Message[]>>("dff_messages", DEFAULT_MESSAGES);
+    // Remove os grupos e mensagens fictícios que vinham instalados como demonstração,
+    // preservando os grupos e conversas criados pelo próprio usuário.
+    const storedGroups = loadFromStorage<Group[]>("dff_groups", DEFAULT_GROUPS);
+    const savedGroups = storedGroups.filter((group) => !SAMPLE_GROUP_NAMES.has(group.name));
+    const storedMessages = loadFromStorage<Record<number, Message[]>>("dff_messages", DEFAULT_MESSAGES);
+    const sampleGroupIds = new Set(storedGroups.filter((group) => SAMPLE_GROUP_NAMES.has(group.name)).map((group) => group.id));
+    const savedMessages = Object.fromEntries(
+      Object.entries(storedMessages).filter(([groupId]) => !sampleGroupIds.has(Number(groupId)))
+    ) as Record<number, Message[]>;
     if (savedNick) { setNickname(savedNick); if (!isSupabaseConfigured) setIsLoggedIn(true); }
     setProfilePhoto(savedProfilePhoto); setHideProfilePhoto(savedHideProfilePhoto);
     setGroups(savedGroups); setMessages(savedMessages); setHydrated(true);
