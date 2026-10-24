@@ -24,6 +24,7 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
   const [showAppearance, setShowAppearance] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
   const [themePreset, setThemePreset] = useState("classic-green");
+  const [themeLoaded, setThemeLoaded] = useState(false);
   const [themeColor, setThemeColor] = useState("green");
   const [themeMode, setThemeMode] = useState<"light" | "dark">("dark");
   const [showAccount, setShowAccount] = useState(false);
@@ -58,9 +59,11 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
       if (savedColor && ["green", "pink", "blue", "red"].includes(savedColor)) setThemeColor(savedColor);
       if (savedMode === "light" || savedMode === "dark") setThemeMode(savedMode);
     } catch {}
+    setThemeLoaded(true);
   }, []);
 
   useEffect(() => {
+    if (!themeLoaded) return;
     document.documentElement.dataset.theme = themeColor;
     document.documentElement.dataset.mode = themeMode;
     document.documentElement.dataset.preset = themePreset;
@@ -69,7 +72,7 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
       localStorage.setItem("dff_theme_mode", themeMode);
       localStorage.setItem("dff_theme_preset", themePreset);
     } catch {}
-  }, [themeColor, themeMode, themePreset]);
+  }, [themeColor, themeMode, themePreset, themeLoaded]);
 
   const [showSubscriptions, setShowSubscriptions] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"mensal" | "anual">("anual");
