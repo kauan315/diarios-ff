@@ -126,10 +126,7 @@ export default function Home() {
   const [nickname, setNickname] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [tempNickname, setTempNickname] = useState("");
-
-  // "conversas" ou "comunidades" — telas totalmente separadas
   const [screen, setScreen] = useState<"conversas" | "comunidades">("conversas");
-
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [groups, setGroups] = useState<Group[]>(initialGroups);
   const [messages, setMessages] = useState<Record<number, Message[]>>(initialMessages);
@@ -139,13 +136,11 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupDesc, setNewGroupDesc] = useState("");
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) || null;
   const currentMessages = selectedGroupId ? messages[selectedGroupId] || [] : [];
 
-  // Grupos que o usuário já entrou (aparecem em Conversas)
   const myChats = groups.filter(
     (g) =>
       g.isJoined &&
@@ -153,7 +148,6 @@ export default function Home() {
         g.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  // Todos os grupos (aparecem em Comunidades)
   const allCommunities = groups.filter(
     (g) =>
       g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -172,7 +166,6 @@ export default function Home() {
 
   const handleSendMessage = () => {
     if (!inputText.trim() || !selectedGroupId || !selectedGroup) return;
-
     if (selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe) {
       alert("Somente administradores podem enviar mensagens neste grupo.");
       return;
@@ -198,7 +191,6 @@ export default function Home() {
           : g
       )
     );
-
     setInputText("");
   };
 
@@ -207,7 +199,7 @@ export default function Home() {
       prev.map((g) => (g.id === groupId ? { ...g, isJoined: true, unread: 0 } : g))
     );
     setSelectedGroupId(groupId);
-    setScreen("conversas"); // Volta para a tela de conversas
+    setScreen("conversas");
   };
 
   const handleLeaveGroup = (groupId: number) => {
@@ -222,16 +214,13 @@ export default function Home() {
     if (!selectedGroupId) return;
     setGroups((prev) =>
       prev.map((g) =>
-        g.id === selectedGroupId
-          ? { ...g, onlyAdminsCanSend: !g.onlyAdminsCanSend }
-          : g
+        g.id === selectedGroupId ? { ...g, onlyAdminsCanSend: !g.onlyAdminsCanSend } : g
       )
     );
   };
 
   const handleCreateGroup = () => {
     if (!newGroupName.trim()) return;
-
     const newId = Date.now();
     const newGroup: Group = {
       id: newId,
@@ -245,7 +234,6 @@ export default function Home() {
       isJoined: true,
       createdByMe: true,
     };
-
     setGroups((prev) => [newGroup, ...prev]);
     setMessages((prev) => ({
       ...prev,
@@ -260,7 +248,6 @@ export default function Home() {
         },
       ],
     }));
-
     setNewGroupName("");
     setNewGroupDesc("");
     setShowCreateGroup(false);
@@ -270,128 +257,114 @@ export default function Home() {
 
   const showChat = selectedGroupId !== null && screen === "conversas";
 
-  // ========== TELA DE LOGIN ==========
+  // ===== LOGIN =====
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-whatsapp-darker flex items-center justify-center p-4">
+      <div className="min-h-screen bg-wa-bg flex items-center justify-center p-4">
         <div className="w-full max-w-sm">
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-whatsapp-green rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageCircle size={40} className="text-white" />
+          <div className="text-center mb-10">
+            <div className="w-24 h-24 bg-wa-green rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg shadow-wa-green/20">
+              <MessageCircle size={44} className="text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-white">Diários FF</h1>
-            <p className="text-gray-400 mt-2 text-sm">
-              Chat e comunidades de Free Fire
-            </p>
+            <h1 className="text-3xl font-light text-wa-text tracking-wide">Diários FF</h1>
+            <p className="text-wa-secondary mt-2 text-sm">Chat e comunidades de Free Fire</p>
           </div>
 
-          <div className="bg-whatsapp-dark rounded-2xl p-6 space-y-4">
+          <div className="bg-wa-panel rounded-xl p-6 space-y-5">
             <div>
-              <label className="text-sm text-gray-400 mb-1 block">Seu nickname</label>
+              <label className="text-xs text-wa-secondary mb-1.5 block uppercase tracking-wider">Nickname</label>
               <input
                 type="text"
                 value={tempNickname}
                 onChange={(e) => setTempNickname(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                placeholder="Ex: ProPlayerBR"
+                placeholder="Seu nome no jogo"
                 maxLength={20}
-                className="w-full bg-whatsapp-light rounded-lg px-4 py-3 text-white outline-none placeholder-gray-500 focus:ring-2 focus:ring-whatsapp-green"
+                className="w-full bg-wa-input rounded-lg px-4 py-3.5 text-wa-text outline-none placeholder-wa-muted focus:ring-1 focus:ring-wa-green transition"
                 autoFocus
               />
             </div>
-
             <button
               onClick={handleLogin}
               disabled={tempNickname.trim().length < 2}
-              className="w-full bg-whatsapp-green text-white font-medium py-3 rounded-lg hover:bg-[#00c49a] transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full bg-wa-green text-white font-medium py-3.5 rounded-lg hover:bg-wa-green-dark transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Entrar
             </button>
           </div>
-
-          <p className="text-center text-gray-500 text-xs mt-6">
-            Ao entrar você concorda em respeitar as comunidades
-          </p>
         </div>
       </div>
     );
   }
 
-  // ========== TELA DE COMUNIDADES FF (totalmente separada) ==========
+  // ===== COMUNIDADES FF =====
   if (screen === "comunidades") {
     return (
-      <div className="min-h-screen bg-whatsapp-darker flex flex-col">
-        {/* Header */}
-        <div className="bg-whatsapp-light px-4 py-3 flex items-center justify-between shrink-0">
+      <div className="min-h-screen bg-wa-bg flex flex-col">
+        <div className="bg-wa-header px-4 py-3 flex items-center justify-between shrink-0">
           <div>
-            <h1 className="text-xl font-semibold text-white">Comunidades FF</h1>
-            <p className="text-xs text-gray-400">Descubra e entre em diários</p>
+            <h1 className="text-lg font-medium text-wa-text">Comunidades FF</h1>
+            <p className="text-xs text-wa-secondary">Descubra e entre em diários</p>
           </div>
           <button
             onClick={() => setShowCreateGroup(true)}
-            className="bg-whatsapp-green text-white px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1 hover:bg-[#00c49a] transition"
+            className="bg-wa-green text-white px-3.5 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 hover:bg-wa-green-dark transition"
           >
             <Plus size={16} />
-            Cadastrar diário
+            Cadastrar
           </button>
         </div>
 
-        {/* Search */}
-        <div className="p-3 bg-whatsapp-dark shrink-0">
-          <div className="flex items-center bg-whatsapp-light rounded-lg px-3 py-2.5 gap-2">
-            <Search size={18} className="text-gray-400" />
+        <div className="px-3 py-2 bg-wa-panel shrink-0">
+          <div className="flex items-center bg-wa-input rounded-lg px-3 py-2 gap-3">
+            <Search size={18} className="text-wa-secondary" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar diários e comunidades..."
-              className="bg-transparent outline-none text-sm w-full text-white placeholder-gray-400"
+              placeholder="Buscar diários..."
+              className="bg-transparent outline-none text-sm w-full text-wa-text placeholder-wa-muted"
             />
           </div>
         </div>
 
-        {/* Lista de comunidades em cards */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3 pb-24">
+        <div className="flex-1 overflow-y-auto p-3 space-y-2.5 pb-24">
           {allCommunities.length === 0 ? (
-            <div className="text-center py-16 text-gray-500">
+            <div className="text-center py-20 text-wa-muted">
               <Compass size={48} className="mx-auto mb-3 opacity-40" />
-              <p>Nenhum diário encontrado</p>
+              <p className="text-sm">Nenhum diário encontrado</p>
             </div>
           ) : (
             allCommunities.map((group) => (
-              <div
-                key={group.id}
-                className="bg-whatsapp-dark rounded-xl p-4 border border-whatsapp-light/30"
-              >
+              <div key={group.id} className="bg-wa-panel rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-14 h-14 rounded-full bg-whatsapp-green flex items-center justify-center text-white font-bold text-xl shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-lg shrink-0">
                     {group.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-white text-base">{group.name}</h3>
-                    <p className="text-sm text-gray-400 mt-1 line-clamp-2">{group.description}</p>
-                    <p className="text-xs text-gray-500 mt-2">
+                    <h3 className="font-medium text-wa-text">{group.name}</h3>
+                    <p className="text-sm text-wa-secondary mt-0.5 line-clamp-2">{group.description}</p>
+                    <p className="text-xs text-wa-muted mt-1.5">
                       {group.members.toLocaleString("pt-BR")} membros
-                      {group.onlyAdminsCanSend && " • Somente admins"}
+                      {group.onlyAdminsCanSend && " · Somente admins"}
                     </p>
                   </div>
                 </div>
-
-                <div className="mt-4 flex gap-2">
+                <div className="mt-3">
                   {group.isJoined ? (
                     <button
                       onClick={() => {
                         setSelectedGroupId(group.id);
                         setScreen("conversas");
                       }}
-                      className="flex-1 bg-whatsapp-light text-white py-2 rounded-lg text-sm font-medium hover:bg-[#2a3942] transition"
+                      className="w-full bg-wa-header text-wa-text py-2 rounded-lg text-sm font-medium hover:bg-wa-hover transition"
                     >
                       Abrir conversa
                     </button>
                   ) : (
                     <button
                       onClick={() => handleJoinGroup(group.id)}
-                      className="flex-1 bg-whatsapp-green text-white py-2 rounded-lg text-sm font-medium hover:bg-[#00c49a] transition"
+                      className="w-full bg-wa-green text-white py-2 rounded-lg text-sm font-medium hover:bg-wa-green-dark transition"
                     >
                       Entrar no diário
                     </button>
@@ -402,71 +375,62 @@ export default function Home() {
           )}
         </div>
 
-        {/* Bottom navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-whatsapp-light border-t border-whatsapp-dark flex shrink-0">
+        {/* Bottom nav */}
+        <div className="fixed bottom-0 left-0 right-0 bg-wa-header border-t border-wa-border flex">
           <button
             onClick={() => {
               setScreen("conversas");
               setSelectedGroupId(null);
               setSearchQuery("");
             }}
-            className="flex-1 py-3 flex flex-col items-center gap-1 text-gray-400 hover:text-white transition"
+            className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-secondary hover:text-wa-text transition"
           >
             <MessageCircle size={22} />
-            <span className="text-xs">Conversas</span>
+            <span className="text-[11px]">Conversas</span>
           </button>
-          <button
-            className="flex-1 py-3 flex flex-col items-center gap-1 text-whatsapp-green"
-          >
+          <button className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-green">
             <Users size={22} />
-            <span className="text-xs font-medium">Comunidades FF</span>
+            <span className="text-[11px] font-medium">Comunidades</span>
           </button>
         </div>
 
-        {/* Modal Criar Diário */}
         {showCreateGroup && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div className="bg-whatsapp-dark rounded-2xl w-full max-w-md overflow-hidden">
-              <div className="bg-whatsapp-light px-4 py-3 flex items-center justify-between">
-                <h2 className="text-lg font-medium text-white">Cadastrar diário</h2>
-                <button
-                  onClick={() => setShowCreateGroup(false)}
-                  className="text-gray-400 hover:text-white"
-                >
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center">
+            <div className="bg-wa-panel w-full sm:max-w-md sm:rounded-xl overflow-hidden">
+              <div className="bg-wa-header px-4 py-3 flex items-center justify-between">
+                <h2 className="text-base font-medium text-wa-text">Cadastrar diário</h2>
+                <button onClick={() => setShowCreateGroup(false)} className="text-wa-secondary hover:text-wa-text">
                   <X size={22} />
                 </button>
               </div>
-
-              <div className="p-5 space-y-4">
+              <div className="p-4 space-y-4">
                 <div>
-                  <label className="text-sm text-gray-400 mb-1 block">Nome do diário</label>
+                  <label className="text-xs text-wa-secondary mb-1.5 block">Nome do diário</label>
                   <input
                     type="text"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
                     placeholder="Ex: Meu Clã Free Fire"
                     maxLength={40}
-                    className="w-full bg-whatsapp-light rounded-lg px-4 py-3 text-white outline-none placeholder-gray-500 focus:ring-2 focus:ring-whatsapp-green"
+                    className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none placeholder-wa-muted focus:ring-1 focus:ring-wa-green"
                     autoFocus
                   />
                 </div>
-
                 <div>
-                  <label className="text-sm text-gray-400 mb-1 block">Descrição</label>
+                  <label className="text-xs text-wa-secondary mb-1.5 block">Descrição</label>
                   <textarea
                     value={newGroupDesc}
                     onChange={(e) => setNewGroupDesc(e.target.value)}
                     placeholder="Sobre o que é esse diário..."
                     rows={3}
                     maxLength={200}
-                    className="w-full bg-whatsapp-light rounded-lg px-4 py-3 text-white outline-none placeholder-gray-500 focus:ring-2 focus:ring-whatsapp-green resize-none"
+                    className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none placeholder-wa-muted focus:ring-1 focus:ring-wa-green resize-none"
                   />
                 </div>
-
                 <button
                   onClick={handleCreateGroup}
                   disabled={!newGroupName.trim()}
-                  className="w-full bg-whatsapp-green text-white font-medium py-3 rounded-lg hover:bg-[#00c49a] transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full bg-wa-green text-white font-medium py-3 rounded-lg hover:bg-wa-green-dark transition disabled:opacity-40"
                 >
                   Cadastrar diário
                 </button>
@@ -478,97 +442,94 @@ export default function Home() {
     );
   }
 
-  // ========== TELA DE CONVERSAS (estilo WhatsApp) ==========
+  // ===== CONVERSAS (WhatsApp style) =====
   return (
-    <div className="flex h-screen bg-whatsapp-darker overflow-hidden">
-      {/* Sidebar de conversas */}
-      <div
-        className={`${
-          showChat ? "hidden md:flex" : "flex"
-        } w-full md:w-[400px] flex-col border-r border-whatsapp-light`}
-      >
-        <div className="bg-whatsapp-light px-4 py-3 flex items-center justify-between shrink-0">
-          <div>
-            <h1 className="text-xl font-semibold text-white">Conversas</h1>
-            <p className="text-xs text-gray-400">Olá, {nickname}</p>
+    <div className="flex h-screen bg-wa-bg overflow-hidden">
+      {/* Sidebar */}
+      <div className={`${showChat ? "hidden md:flex" : "flex"} w-full md:w-[400px] flex-col bg-wa-panel border-r border-wa-border`}>
+        <div className="bg-wa-header px-4 py-2.5 flex items-center justify-between shrink-0 h-[60px]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-sm">
+              {nickname.charAt(0).toUpperCase()}
+            </div>
+            <span className="text-wa-text font-medium">{nickname}</span>
           </div>
-          <button className="text-gray-400 hover:text-white transition" title="Configurações">
-            <Settings size={22} />
-          </button>
+          <div className="flex items-center gap-5 text-wa-secondary">
+            <button className="hover:text-wa-text transition" title="Configurações">
+              <Settings size={20} />
+            </button>
+          </div>
         </div>
 
-        <div className="p-3 bg-whatsapp-dark shrink-0">
-          <div className="flex items-center bg-whatsapp-light rounded-lg px-3 py-2 gap-2">
-            <Search size={18} className="text-gray-400" />
+        <div className="px-3 py-2 bg-wa-panel shrink-0">
+          <div className="flex items-center bg-wa-input rounded-lg px-3 py-1.5 gap-3">
+            <Search size={16} className="text-wa-secondary" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pesquisar conversas..."
-              className="bg-transparent outline-none text-sm w-full text-white placeholder-gray-400"
+              placeholder="Pesquisar"
+              className="bg-transparent outline-none text-sm w-full text-wa-text placeholder-wa-muted py-1"
             />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
+        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
           {myChats.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <MessageCircle size={40} className="mx-auto mb-3 opacity-40" />
-              <p className="text-sm">Você ainda não tem conversas.</p>
+            <div className="p-10 text-center text-wa-muted">
+              <MessageCircle size={40} className="mx-auto mb-3 opacity-30" />
+              <p className="text-sm">Nenhuma conversa ainda</p>
               <button
                 onClick={() => {
                   setScreen("comunidades");
                   setSearchQuery("");
                 }}
-                className="mt-3 text-whatsapp-green text-sm hover:underline"
+                className="mt-3 text-wa-green text-sm hover:underline"
               >
                 Explorar Comunidades FF
               </button>
             </div>
           ) : (
             myChats.map((group) => (
-              <div
+              <button
                 key={group.id}
-                className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-whatsapp-light transition cursor-pointer ${
-                  selectedGroupId === group.id ? "bg-whatsapp-light" : ""
-                }`}
                 onClick={() => {
                   setSelectedGroupId(group.id);
                   setShowGroupInfo(false);
                 }}
+                className={`w-full flex items-center gap-3 px-3 py-3 hover:bg-wa-hover transition text-left ${
+                  selectedGroupId === group.id ? "bg-wa-hover" : ""
+                }`}
               >
-                <div className="w-12 h-12 rounded-full bg-whatsapp-green flex items-center justify-center text-white font-bold text-lg shrink-0">
+                <div className="w-12 h-12 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-lg shrink-0">
                   {group.name.charAt(0)}
                 </div>
-                <div className="flex-1 text-left min-w-0">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium text-white truncate">
-                      {group.name}
-                      {group.createdByMe && (
-                        <span className="ml-1 text-[10px] text-whatsapp-green">• você</span>
-                      )}
-                    </h3>
-                    <span className="text-xs text-gray-400 shrink-0 ml-2">{group.time}</span>
+                <div className="flex-1 min-w-0 border-b border-wa-border pb-3">
+                  <div className="flex justify-between items-baseline">
+                    <h3 className="font-medium text-wa-text truncate text-[15px]">{group.name}</h3>
+                    <span className={`text-[11px] shrink-0 ml-2 ${
+                      group.unread > 0 ? "text-wa-green" : "text-wa-muted"
+                    }`}>{group.time}</span>
                   </div>
                   <div className="flex justify-between items-center mt-0.5">
-                    <p className="text-sm text-gray-400 truncate">{group.lastMessage}</p>
+                    <p className="text-[13px] text-wa-secondary truncate">{group.lastMessage}</p>
                     {group.unread > 0 && (
-                      <span className="bg-whatsapp-green text-white text-xs rounded-full px-1.5 min-w-[20px] text-center shrink-0 ml-2">
+                      <span className="bg-wa-green text-white text-[11px] font-medium rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shrink-0 ml-2">
                         {group.unread}
                       </span>
                     )}
                   </div>
                 </div>
-              </div>
+              </button>
             ))
           )}
         </div>
 
-        {/* Bottom navigation (mobile) */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-whatsapp-light border-t border-whatsapp-dark flex">
-          <button className="flex-1 py-3 flex flex-col items-center gap-1 text-whatsapp-green">
+        {/* Bottom nav mobile */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-wa-header border-t border-wa-border flex">
+          <button className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-green">
             <MessageCircle size={22} />
-            <span className="text-xs font-medium">Conversas</span>
+            <span className="text-[11px] font-medium">Conversas</span>
           </button>
           <button
             onClick={() => {
@@ -576,84 +537,64 @@ export default function Home() {
               setSelectedGroupId(null);
               setSearchQuery("");
             }}
-            className="flex-1 py-3 flex flex-col items-center gap-1 text-gray-400 hover:text-white transition"
+            className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-secondary hover:text-wa-text transition"
           >
             <Users size={22} />
-            <span className="text-xs">Comunidades FF</span>
+            <span className="text-[11px]">Comunidades</span>
           </button>
         </div>
       </div>
 
-      {/* Área do chat */}
-      <div
-        className={`${
-          showChat ? "flex" : "hidden md:flex"
-        } flex-1 flex-col relative`}
-      >
+      {/* Chat area */}
+      <div className={`${showChat ? "flex" : "hidden md:flex"} flex-1 flex-col relative bg-wa-bg`}>
         {selectedGroup ? (
           <>
-            <div className="bg-whatsapp-light px-3 md:px-4 py-3 flex items-center gap-3 border-b border-whatsapp-dark shrink-0">
-              <button
-                className="md:hidden text-gray-300 hover:text-white"
-                onClick={() => setSelectedGroupId(null)}
-              >
+            <div className="bg-wa-header px-3 md:px-4 h-[60px] flex items-center gap-3 shrink-0">
+              <button className="md:hidden text-wa-secondary hover:text-wa-text" onClick={() => setSelectedGroupId(null)}>
                 <ArrowLeft size={24} />
               </button>
               <div
-                className="w-10 h-10 rounded-full bg-whatsapp-green flex items-center justify-center text-white font-bold cursor-pointer"
+                className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold cursor-pointer"
                 onClick={() => setShowGroupInfo(true)}
               >
                 {selectedGroup.name.charAt(0)}
               </div>
-              <div
-                className="flex-1 min-w-0 cursor-pointer"
-                onClick={() => setShowGroupInfo(true)}
-              >
-                <h2 className="font-medium text-white truncate">{selectedGroup.name}</h2>
-                <p className="text-xs text-gray-400">
+              <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setShowGroupInfo(true)}>
+                <h2 className="font-medium text-wa-text truncate text-[16px]">{selectedGroup.name}</h2>
+                <p className="text-[12px] text-wa-secondary">
                   {selectedGroup.members.toLocaleString("pt-BR")} membros
-                  {selectedGroup.onlyAdminsCanSend && " • Somente admins"}
+                  {selectedGroup.onlyAdminsCanSend && " · Somente admins"}
                 </p>
               </div>
-              <button
-                className="text-gray-400 hover:text-white"
-                onClick={() => setShowGroupInfo(true)}
-              >
-                <MoreVertical size={22} />
+              <button className="text-wa-secondary hover:text-wa-text" onClick={() => setShowGroupInfo(true)}>
+                <MoreVertical size={20} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 bg-[#0b141a]">
+            <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-1 chat-bg">
               {selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe && (
-                <div className="text-center py-2">
-                  <span className="bg-whatsapp-light text-gray-300 text-xs px-3 py-1 rounded-full">
+                <div className="text-center py-3">
+                  <span className="bg-wa-header/80 text-wa-secondary text-xs px-3 py-1.5 rounded-lg">
                     🔒 Somente administradores podem enviar mensagens
                   </span>
                 </div>
               )}
 
               {currentMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}
-                >
+                <div key={msg.id} className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}>
                   <div
-                    className={`rounded-lg px-3 py-1.5 max-w-[80%] md:max-w-[65%] ${
-                      msg.isMe ? "bg-whatsapp-bubble" : "bg-whatsapp-incoming"
+                    className={`relative rounded-lg px-2.5 py-1.5 max-w-[85%] md:max-w-[65%] shadow-sm ${
+                      msg.isMe ? "bg-wa-bubble rounded-tr-none" : "bg-wa-incoming rounded-tl-none"
                     }`}
                   >
                     {!msg.isMe && (
-                      <p className="text-xs text-whatsapp-green font-medium mb-0.5">
+                      <p className="text-[13px] text-wa-green font-medium mb-0.5">
                         {msg.sender}
-                        {msg.isAdmin && " • Admin"}
+                        {msg.isAdmin && <span className="text-wa-muted font-normal"> · Admin</span>}
                       </p>
                     )}
-                    <p className="text-sm text-white whitespace-pre-wrap break-words">{msg.text}</p>
-                    <p
-                      className={`text-[10px] text-right mt-0.5 ${
-                        msg.isMe ? "text-gray-300" : "text-gray-400"
-                      }`}
-                    >
+                    <p className="text-[14.2px] text-wa-text leading-snug whitespace-pre-wrap break-words">{msg.text}</p>
+                    <p className={`text-[11px] text-right mt-0.5 ${msg.isMe ? "text-wa-secondary" : "text-wa-muted"}`}>
                       {msg.time}
                     </p>
                   </div>
@@ -662,11 +603,11 @@ export default function Home() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="bg-whatsapp-light px-3 md:px-4 py-2.5 flex items-center gap-2 shrink-0">
-              <button className="text-gray-400 hover:text-white p-1">
+            <div className="bg-wa-header px-2 md:px-3 py-2 flex items-center gap-2 shrink-0">
+              <button className="text-wa-secondary hover:text-wa-text p-1.5">
                 <Smile size={24} />
               </button>
-              <button className="text-gray-400 hover:text-white p-1">
+              <button className="text-wa-secondary hover:text-wa-text p-1.5">
                 <Paperclip size={22} />
               </button>
               <input
@@ -676,97 +617,78 @@ export default function Home() {
                 onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                 placeholder={
                   selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe
-                    ? "Somente admins podem enviar..."
-                    : "Digite uma mensagem"
+                    ? "Somente admins podem enviar"
+                    : "Mensagem"
                 }
                 disabled={selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe}
-                className="flex-1 bg-whatsapp-dark rounded-lg px-4 py-2.5 text-sm outline-none text-white placeholder-gray-400 disabled:opacity-50"
+                className="flex-1 bg-wa-input rounded-lg px-4 py-2.5 text-[15px] outline-none text-wa-text placeholder-wa-muted disabled:opacity-50"
               />
               <button
                 onClick={handleSendMessage}
-                disabled={
-                  !inputText.trim() ||
-                  (selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe)
-                }
-                className="bg-whatsapp-green text-white p-2.5 rounded-full hover:bg-[#00c49a] transition disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={!inputText.trim() || (selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe)}
+                className="bg-wa-green text-white p-2.5 rounded-full hover:bg-wa-green-dark transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                <Send size={20} />
+                <Send size={18} />
               </button>
             </div>
 
-            {/* Painel info do grupo */}
+            {/* Group info panel */}
             {showGroupInfo && (
-              <div className="absolute inset-0 bg-whatsapp-darker z-20 flex flex-col">
-                <div className="bg-whatsapp-light px-4 py-3 flex items-center gap-3 shrink-0">
-                  <button
-                    onClick={() => setShowGroupInfo(false)}
-                    className="text-gray-300 hover:text-white"
-                  >
+              <div className="absolute inset-0 bg-wa-bg z-20 flex flex-col">
+                <div className="bg-wa-header px-4 h-[60px] flex items-center gap-4 shrink-0">
+                  <button onClick={() => setShowGroupInfo(false)} className="text-wa-secondary hover:text-wa-text">
                     <ArrowLeft size={24} />
                   </button>
-                  <h2 className="text-lg font-medium text-white">Dados do grupo</h2>
+                  <h2 className="text-base font-medium text-wa-text">Dados do grupo</h2>
                 </div>
 
                 <div className="flex-1 overflow-y-auto">
-                  <div className="flex flex-col items-center py-8 bg-whatsapp-dark">
-                    <div className="w-28 h-28 rounded-full bg-whatsapp-green flex items-center justify-center text-white font-bold text-4xl mb-4">
+                  <div className="flex flex-col items-center py-8 bg-wa-panel">
+                    <div className="w-32 h-32 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-5xl mb-4">
                       {selectedGroup.name.charAt(0)}
                     </div>
-                    <h3 className="text-xl font-medium text-white">{selectedGroup.name}</h3>
-                    <p className="text-sm text-gray-400 mt-1">
-                      Grupo • {selectedGroup.members.toLocaleString("pt-BR")} participantes
+                    <h3 className="text-xl text-wa-text">{selectedGroup.name}</h3>
+                    <p className="text-sm text-wa-secondary mt-1">
+                      Grupo · {selectedGroup.members.toLocaleString("pt-BR")} participantes
                     </p>
                   </div>
 
-                  <div className="px-4 py-4 bg-whatsapp-dark mt-2">
-                    <p className="text-xs text-whatsapp-green mb-1">Descrição</p>
-                    <p className="text-sm text-gray-200">{selectedGroup.description}</p>
+                  <div className="px-4 py-4 bg-wa-panel mt-2">
+                    <p className="text-xs text-wa-green mb-1">Descrição do grupo</p>
+                    <p className="text-sm text-wa-text">{selectedGroup.description}</p>
                   </div>
 
-                  <div className="mt-2 bg-whatsapp-dark">
-                    <button
-                      onClick={toggleOnlyAdmins}
-                      className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-whatsapp-light transition"
-                    >
-                      <Shield size={22} className="text-gray-400" />
+                  <div className="mt-2 bg-wa-panel">
+                    <button onClick={toggleOnlyAdmins} className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover transition">
+                      <Shield size={20} className="text-wa-secondary" />
                       <div className="flex-1 text-left">
-                        <p className="text-sm text-white">Somente admins podem enviar mensagens</p>
-                        <p className="text-xs text-gray-400">
-                          {selectedGroup.onlyAdminsCanSend ? "Ativado" : "Desativado"}
-                        </p>
+                        <p className="text-[15px] text-wa-text">Somente admins podem enviar mensagens</p>
+                        <p className="text-xs text-wa-secondary">{selectedGroup.onlyAdminsCanSend ? "Ativado" : "Desativado"}</p>
                       </div>
-                      <div
-                        className={`w-10 h-6 rounded-full transition relative ${
-                          selectedGroup.onlyAdminsCanSend ? "bg-whatsapp-green" : "bg-gray-600"
-                        }`}
-                      >
+                      <div className={`w-10 h-6 rounded-full relative transition ${selectedGroup.onlyAdminsCanSend ? "bg-wa-green" : "bg-wa-input"}`}>
                         <div
-                          className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all"
-                          style={{
-                            left: selectedGroup.onlyAdminsCanSend ? "18px" : "2px",
-                          }}
+                          className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all shadow"
+                          style={{ left: selectedGroup.onlyAdminsCanSend ? "18px" : "2px" }}
                         />
                       </div>
                     </button>
-
-                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-whatsapp-light transition">
-                      <UserPlus size={22} className="text-gray-400" />
-                      <span className="text-sm text-white">Adicionar participantes</span>
+                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover transition">
+                      <UserPlus size={20} className="text-wa-secondary" />
+                      <span className="text-[15px] text-wa-text">Adicionar participantes</span>
                     </button>
-
-                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-whatsapp-light transition">
-                      <Info size={22} className="text-gray-400" />
-                      <span className="text-sm text-white">Ver participantes</span>
+                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover transition">
+                      <Info size={20} className="text-wa-secondary" />
+                      <span className="text-[15px] text-wa-text">Ver participantes</span>
                     </button>
                   </div>
 
-                  <div className="mt-2 bg-whatsapp-dark">
+                  <div className="mt-2 bg-wa-panel">
                     <button
                       onClick={() => handleLeaveGroup(selectedGroup.id)}
-                      className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-whatsapp-light transition text-red-400"
+                      className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover transition text-wa-danger"
                     >
-                      <LogOut size={22} />
-                      <span className="text-sm">Sair do grupo</span>
+                      <LogOut size={20} />
+                      <span className="text-[15px]">Sair do grupo</span>
                     </button>
                   </div>
                 </div>
@@ -774,12 +696,14 @@ export default function Home() {
             )}
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
-            <div className="text-center px-6">
-              <MessageCircle size={72} className="mx-auto mb-4 opacity-20" />
-              <p className="text-xl font-light text-gray-400">Diários FF</p>
-              <p className="text-sm mt-2 text-gray-500 max-w-sm">
-                Olá, {nickname}! Selecione uma conversa ou vá em Comunidades FF
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center px-8">
+              <div className="w-20 h-20 rounded-full bg-wa-header flex items-center justify-center mx-auto mb-5">
+                <MessageCircle size={36} className="text-wa-muted" />
+              </div>
+              <p className="text-xl font-light text-wa-text">Diários FF</p>
+              <p className="text-sm mt-2 text-wa-secondary max-w-xs">
+                Envie e receba mensagens nos diários de Free Fire.
               </p>
             </div>
           </div>
