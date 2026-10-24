@@ -3,7 +3,7 @@
 import { useState } from "react";
 import {
   ArrowLeft, MoreVertical, Search, Shield, Bell, Image as ImageIcon,
-  Lock, Heart, Contact, Upload, Trash2, LogOut, Flag,
+  Heart, Trash2, LogOut, Flag,
   Eye, ChevronRight,
 } from "lucide-react";
 
@@ -196,15 +196,7 @@ export default function GroupInfoScreen({
               <ImageIcon size={22} className="text-wa-secondary" />
               <p className="text-[15px] text-wa-text">Visibilidade de mídia</p>
             </button>
-            <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
-              <Lock size={22} className="text-wa-secondary" />
-              <div>
-                <p className="text-[15px] text-wa-text">Criptografia</p>
-                <p className="text-xs text-wa-secondary">
-                  As mensagens são protegidas com criptografia de ponta a ponta.
-                </p>
-              </div>
-            </button>
+            
 
 
             <button
@@ -241,14 +233,8 @@ export default function GroupInfoScreen({
               <Heart size={22} className="text-wa-secondary" />
               <p className="text-[15px] text-wa-text">Adicionar aos favoritos</p>
             </button>
-            <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
-              <Contact size={22} className="text-wa-secondary" />
-              <p className="text-[15px] text-wa-text">Adicionar à lista</p>
-            </button>
-            <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
-              <Upload size={22} className="text-wa-secondary" />
-              <p className="text-[15px] text-wa-text">Exportar conversa</p>
-            </button>
+            
+            
             <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left text-wa-danger">
               <Trash2 size={22} />
               <p className="text-[15px]">Limpar conversa</p>
