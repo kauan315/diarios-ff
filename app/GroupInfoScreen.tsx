@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft, MoreVertical, Search, Shield, Image as ImageIcon,
   Heart, Trash2, LogOut, Flag,
@@ -64,6 +64,24 @@ export default function GroupInfoScreen({
   const [descExpanded, setDescExpanded] = useState(false);
   const [mediaVisibilityOpen, setMediaVisibilityOpen] = useState(false);
   const [mediaVisibility, setMediaVisibility] = useState<"Sim" | "Não" | "Padrão">("Padrão");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`zyron_media_visibility_${group.id}`);
+      if (saved === "Sim" || saved === "Não" || saved === "Padrão") setMediaVisibility(saved);
+      else setMediaVisibility("Padrão");
+    } catch {
+      setMediaVisibility("Padrão");
+    }
+  }, [group.id]);
+
+  const chooseMediaVisibility = (option: "Sim" | "Não" | "Padrão") => {
+    setMediaVisibility(option);
+    try {
+      localStorage.setItem(`zyron_media_visibility_${group.id}`, option);
+    } catch {}
+    setMediaVisibilityOpen(false);
+  };
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("Spam");
   const [reportSent, setReportSent] = useState(false);
@@ -109,7 +127,7 @@ export default function GroupInfoScreen({
               {(["Sim", "Não", "Padrão"] as const).map((option) => (
                 <button
                   key={option}
-                  onClick={() => { setMediaVisibility(option); setMediaVisibilityOpen(false); }}
+                  onClick={() => chooseMediaVisibility(option)}
                   className="w-full flex items-center gap-3 rounded-lg px-2 py-3 text-left hover:bg-wa-hover"
                 >
                   <span className={`flex h-5 w-5 items-center justify-center rounded-full border ${mediaVisibility === option ? "border-wa-green" : "border-wa-secondary"}`}>
@@ -307,7 +325,7 @@ export default function GroupInfoScreen({
               <ImageIcon size={22} className="text-wa-secondary" />
               <div>
                 <p className="text-[15px] text-wa-text">Visibilidade de mídia</p>
-                <p className="text-xs text-wa-secondary">Padrão</p>
+                <p className="text-xs text-wa-secondary">{mediaVisibility}</p>
               </div>
             </button>
             
