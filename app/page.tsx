@@ -6,6 +6,7 @@ import {
   Send, Smile, Paperclip, Info, Shield, UserPlus, LogOut, X, Compass, Bot, Palette,
 } from "lucide-react";
 import ProfileScreen from "./ProfileScreen";
+import GroupInfoScreen from "./GroupInfoScreen";
 
 type Message = { id: number; sender: string; text: string; time: string; isMe: boolean; isAdmin?: boolean };
 type Group = {
@@ -15,11 +16,11 @@ type Group = {
 };
 
 const DEFAULT_GROUPS: Group[] = [
-  { id: 1, name: "Diário Free Fire BR", description: "Comunidade principal de diários do Free Fire Brasil.", members: 1240, lastMessage: "Alguém upou o rank hoje?", time: "14:32", unread: 0, onlyAdminsCanSend: false, isJoined: false },
-  { id: 2, name: "Clãs e Organizações", description: "Encontre e entre em clãs.", members: 890, lastMessage: "Procuro membros ativos", time: "13:15", unread: 0, onlyAdminsCanSend: false, isJoined: false },
-  { id: 3, name: "Dicas e Estratégias", description: "Compartilhe dicas de gameplay.", members: 2100, lastMessage: "Melhor loadout da temporada", time: "11:48", unread: 0, onlyAdminsCanSend: false, isJoined: false },
-  { id: 4, name: "Diário Ranked Elite", description: "Só jogadores Elite e acima.", members: 456, lastMessage: "Somente admins podem enviar mensagens", time: "10:02", unread: 0, onlyAdminsCanSend: true, isJoined: false },
-  { id: 5, name: "Free Fire Latinoamérica", description: "Comunidad de Free Fire Latinoamérica", members: 3200, lastMessage: "¿Alguien para ranked?", time: "09:45", unread: 0, onlyAdminsCanSend: false, isJoined: false },
+  { id: 1, name: "Diário Free Fire BR", description: "Comunidade principal de diários do Free Fire Brasil. Respeitem as regras e divirtam-se!", members: 1240, lastMessage: "Alguém upou o rank hoje?", time: "14:32", unread: 0, onlyAdminsCanSend: false, isJoined: false },
+  { id: 2, name: "Clãs e Organizações", description: "Encontre e entre em clãs. Divulgue sua organização aqui.", members: 890, lastMessage: "Procuro membros ativos", time: "13:15", unread: 0, onlyAdminsCanSend: false, isJoined: false },
+  { id: 3, name: "Dicas e Estratégias", description: "Compartilhe dicas de gameplay, loadouts e estratégias.", members: 2100, lastMessage: "Melhor loadout da temporada", time: "11:48", unread: 0, onlyAdminsCanSend: false, isJoined: false },
+  { id: 4, name: "Diário Ranked Elite", description: "Só jogadores Elite e acima. Ambiente sério.", members: 456, lastMessage: "Somente admins podem enviar mensagens", time: "10:02", unread: 0, onlyAdminsCanSend: true, isJoined: false },
+  { id: 5, name: "Free Fire Latinoamérica", description: "Comunidad de Free Fire para jugadores de Latinoamérica", members: 3200, lastMessage: "¿Alguien para ranked?", time: "09:45", unread: 0, onlyAdminsCanSend: false, isJoined: false },
 ];
 
 const DEFAULT_MESSAGES: Record<number, Message[]> = {
@@ -27,9 +28,7 @@ const DEFAULT_MESSAGES: Record<number, Message[]> = {
     { id: 1, sender: "Admin", text: "Bem-vindos ao grupo! Leiam as regras.", time: "10:00", isMe: false, isAdmin: true },
     { id: 2, sender: "Jogador123", text: "Alguém quer duo ranked?", time: "14:30", isMe: false },
   ],
-  2: [
-    { id: 1, sender: "LíderOrg", text: "Procuro membros ativos pro clã.", time: "13:10", isMe: false, isAdmin: true },
-  ],
+  2: [{ id: 1, sender: "LíderOrg", text: "Procuro membros ativos pro clã.", time: "13:10", isMe: false, isAdmin: true }],
   3: [{ id: 1, sender: "ProPlayer", text: "Melhor loadout: MP40 + Desert", time: "11:40", isMe: false }],
   4: [{ id: 1, sender: "Admin Elite", text: "Somente administradores podem enviar mensagens.", time: "09:00", isMe: false, isAdmin: true }],
   5: [{ id: 1, sender: "Admin", text: "Bienvenidos!", time: "09:00", isMe: false, isAdmin: true }],
@@ -67,9 +66,7 @@ export default function Home() {
     const savedGroups = loadFromStorage<Group[]>("dff_groups", DEFAULT_GROUPS);
     const savedMessages = loadFromStorage<Record<number, Message[]>>("dff_messages", DEFAULT_MESSAGES);
     if (savedNick) { setNickname(savedNick); setIsLoggedIn(true); }
-    setGroups(savedGroups);
-    setMessages(savedMessages);
-    setHydrated(true);
+    setGroups(savedGroups); setMessages(savedMessages); setHydrated(true);
   }, []);
 
   useEffect(() => {
@@ -82,12 +79,10 @@ export default function Home() {
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) || null;
   const currentMessages = selectedGroupId ? messages[selectedGroupId] || [] : [];
   const myChats = groups.filter((g) => g.isJoined).filter((g) =>
-    g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    g.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+    g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
   );
   const allCommunities = groups.filter((g) =>
-    g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    g.description.toLowerCase().includes(searchQuery.toLowerCase())
+    g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [currentMessages]);
@@ -361,46 +356,13 @@ export default function Home() {
                 className="bg-wa-green text-white p-2.5 rounded-full disabled:opacity-40"><Send size={18} /></button>
             </div>
             {showGroupInfo && (
-              <div className="absolute inset-0 bg-wa-bg z-20 flex flex-col">
-                <div className="bg-wa-header px-4 h-[60px] flex items-center gap-4 shrink-0">
-                  <button onClick={() => setShowGroupInfo(false)} className="text-wa-secondary"><ArrowLeft size={24} /></button>
-                  <h2 className="text-base font-medium text-wa-text">Dados do grupo</h2>
-                </div>
-                <div className="flex-1 overflow-y-auto">
-                  <div className="flex flex-col items-center py-8 bg-wa-panel">
-                    <div className="w-32 h-32 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-5xl mb-4">{selectedGroup.name.charAt(0)}</div>
-                    <h3 className="text-xl text-wa-text">{selectedGroup.name}</h3>
-                    <p className="text-sm text-wa-secondary mt-1">Grupo · {selectedGroup.members.toLocaleString("pt-BR")} participantes</p>
-                  </div>
-                  <div className="px-4 py-4 bg-wa-panel mt-2">
-                    <p className="text-xs text-wa-green-dark mb-1">Descrição do grupo</p>
-                    <p className="text-sm text-wa-text">{selectedGroup.description}</p>
-                  </div>
-                  <div className="mt-2 bg-wa-panel">
-                    <button onClick={toggleOnlyAdmins} className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover">
-                      <Shield size={20} className="text-wa-secondary" />
-                      <div className="flex-1 text-left">
-                        <p className="text-[15px] text-wa-text">Somente admins podem enviar mensagens</p>
-                        <p className="text-xs text-wa-secondary">{selectedGroup.onlyAdminsCanSend ? "Ativado" : "Desativado"}</p>
-                      </div>
-                      <div className={`w-10 h-6 rounded-full relative ${selectedGroup.onlyAdminsCanSend ? "bg-wa-green" : "bg-wa-input"}`}>
-                        <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all shadow" style={{ left: selectedGroup.onlyAdminsCanSend ? "18px" : "2px" }} />
-                      </div>
-                    </button>
-                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover">
-                      <UserPlus size={20} className="text-wa-secondary" /><span className="text-[15px] text-wa-text">Adicionar participantes</span>
-                    </button>
-                    <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover">
-                      <Info size={20} className="text-wa-secondary" /><span className="text-[15px] text-wa-text">Ver participantes</span>
-                    </button>
-                  </div>
-                  <div className="mt-2 bg-wa-panel">
-                    <button onClick={() => handleLeaveGroup(selectedGroup.id)} className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-wa-danger">
-                      <LogOut size={20} /><span className="text-[15px]">Sair do grupo</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <GroupInfoScreen
+                group={selectedGroup}
+                nickname={nickname}
+                onClose={() => setShowGroupInfo(false)}
+                onLeave={() => handleLeaveGroup(selectedGroup.id)}
+                onToggleOnlyAdmins={toggleOnlyAdmins}
+              />
             )}
           </>
         ) : (
