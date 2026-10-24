@@ -19,7 +19,8 @@ type Props = {
 
 export default function ProfileScreen({ nickname, onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onToggleHideProfilePhoto }: Props) {
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const [showPrivacy, setShowPrivacy] = useState(false);\n  const [showSubscriptions, setShowSubscriptions] = useState(false);\n  const [selectedPlan, setSelectedPlan] = useState<"mensal" | "anual">("anual");
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showSubscriptions, setShowSubscriptions] = useState(false);\n  const [selectedPlan, setSelectedPlan] = useState<"mensal" | "anual">("anual");
   const items = [
     { icon: Diamond, title: "Assinaturas", desc: "Conheça os benefícios premium" },
     { icon: KeyRound, title: "Conta", desc: "Notificações de segurança, mudança de nickname" },
