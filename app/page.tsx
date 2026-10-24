@@ -161,6 +161,14 @@ export default function Home() {
     setSelectedGroupId(null); setShowGroupInfo(false);
   };
 
+  const handleClearConversation = (groupId: number) => {
+    const group = groups.find((g) => g.id === groupId);
+    if (!confirm(`Limpar todas as mensagens da conversa “${group?.name || "grupo"}” neste dispositivo?`)) return;
+    setMessages((prev) => ({ ...prev, [groupId]: [] }));
+    setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, lastMessage: "Nenhuma mensagem", unread: 0 } : g));
+    setShowGroupInfo(false);
+  };
+
   const toggleOnlyAdmins = () => {
     if (!selectedGroupId) return;
     setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, onlyAdminsCanSend: !g.onlyAdminsCanSend } : g));
@@ -606,6 +614,7 @@ export default function Home() {
                 nickname={nickname}
                 onClose={() => setShowGroupInfo(false)}
                 onLeave={() => handleLeaveGroup(selectedGroup.id)}
+                onClearConversation={() => handleClearConversation(selectedGroup.id)}
                 onToggleOnlyAdmins={toggleOnlyAdmins}
                 onToggleFavorite={toggleFavorite}
               />
