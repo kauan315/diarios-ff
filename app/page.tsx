@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Search, MessageCircle, Users, Settings, Plus, ArrowLeft, MoreVertical,
   Send, Smile, Paperclip, Info, Shield, UserPlus, LogOut, X, Compass, Bot, Palette,
-  Camera, MessageCirclePlus, Pin, Mic, ImagePlus, Check, Lock, Globe,
+  Camera, MessageCirclePlus, Pin, Mic, ImagePlus, Check, Lock, Globe, Heart,
 } from "lucide-react";
 import ProfileScreen from "./ProfileScreen";
 import GroupInfoScreen from "./GroupInfoScreen";
@@ -14,7 +14,7 @@ type Group = {
   id: number; name: string; description: string; members: number;
   lastMessage: string; time: string; unread: number;
   onlyAdminsCanSend: boolean; isJoined: boolean; createdByMe?: boolean;
-  photo?: string; memberNames?: string[]; isCommunity?: boolean; isPublic?: boolean;
+  photo?: string; memberNames?: string[]; isCommunity?: boolean; isPublic?: boolean; isFavorite?: boolean;
 };
 
 const DEFAULT_GROUPS: Group[] = [
@@ -103,7 +103,10 @@ export default function Home() {
 
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) || null;
   const currentMessages = selectedGroupId ? messages[selectedGroupId] || [] : [];
-  const myChats = groups.filter((g) => g.isJoined).filter((g) =>
+  const favoriteGroups = groups.filter((g) => g.isFavorite).filter((g) =>
+    g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const myChats = groups.filter((g) => g.isJoined && !g.isFavorite).filter((g) =>
     g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
   );
   const allCommunities = groups.filter((g) => (g.isPublic !== false || g.isJoined) && (
@@ -161,6 +164,11 @@ export default function Home() {
   const toggleOnlyAdmins = () => {
     if (!selectedGroupId) return;
     setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, onlyAdminsCanSend: !g.onlyAdminsCanSend } : g));
+  };
+
+  const toggleFavorite = () => {
+    if (!selectedGroupId) return;
+    setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, isFavorite: !g.isFavorite } : g));
   };
 
   const handleCreateGroup = () => {
@@ -404,38 +412,60 @@ export default function Home() {
         </div>
 
         <div className="flex-1 overflow-y-auto pb-24 md:pb-0">
-          {myChats.length === 0 ? (
+          {favoriteGroups.length > 0 && (
+            <div className="pb-2">
+              <div className="px-4 pt-3 pb-2 flex items-center gap-2 text-wa-green">
+                <Heart size={16} className="fill-wa-green" />
+                <h2 className="text-xs font-semibold uppercase tracking-wide">Favoritos</h2>
+              </div>
+              {favoriteGroups.map((group) => (
+                <button key={group.id} onClick={() => { setSelectedGroupId(group.id); setShowGroupInfo(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-wa-hover text-left ${selectedGroupId === group.id ? "bg-wa-hover" : ""}`}>
+                  <div className="w-[52px] h-[52px] rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-xl shrink-0 overflow-hidden">
+                    {group.photo ? <img src={group.photo} alt={group.name} className="w-full h-full object-cover" /> : group.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0 py-1 border-b border-wa-border">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-wa-text truncate text-[16px] flex-1">{group.name}</h3>
+                      <Heart size={14} className="text-wa-green fill-wa-green shrink-0" />
+                    </div>
+                    <p className="text-[14px] text-wa-secondary truncate mt-0.5">{group.lastMessage}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          {myChats.length === 0 && favoriteGroups.length === 0 ? (
             <div className="p-10 text-center text-wa-muted">
               <MessageCircle size={40} className="mx-auto mb-3 opacity-30" />
               <p className="text-sm">Nenhuma conversa ainda</p>
               <p className="text-xs mt-1">Entre em um diário nas Comunidades</p>
               <button onClick={() => { setScreen("comunidades"); setSearchQuery(""); }} className="mt-3 text-wa-green text-sm hover:underline">Ir para Comunidades FF</button>
             </div>
-          ) : myChats.map((group) => (
-            <button key={group.id} onClick={() => { setSelectedGroupId(group.id); setShowGroupInfo(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-wa-hover text-left ${selectedGroupId === group.id ? "bg-wa-hover" : ""}`}>
-              <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPhotoPreviewGroup(group); }} className="w-[52px] h-[52px] rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-xl shrink-0 overflow-hidden cursor-pointer">
-                {group.photo ? <img src={group.photo} alt={group.name} className="w-full h-full object-cover" /> : group.name.charAt(0)}
-              </div>
-              <div className="flex-1 min-w-0 py-1 border-b border-wa-border">
-                <div className="flex justify-between items-baseline gap-2">
-                  <h3 className="font-medium text-wa-text truncate text-[16px]">{group.name}</h3>
-                  <span className={`text-[12px] shrink-0 ${group.unread > 0 ? "text-wa-green font-medium" : "text-wa-muted"}`}>
-                    {group.time}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-0.5 gap-2">
-                  <p className="text-[14px] text-wa-secondary truncate">{group.lastMessage}</p>
-                  {group.unread > 0 && (
-                    <span className="bg-wa-green text-white text-[12px] font-semibold rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1.5">
-                      {group.unread}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
+          ) : myChats.length > 0 && (
+            <>
+              {favoriteGroups.length > 0 && <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-wa-muted">Conversas</p>}
+              {myChats.map((group) => (
+                <button key={group.id} onClick={() => { setSelectedGroupId(group.id); setShowGroupInfo(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-wa-hover text-left ${selectedGroupId === group.id ? "bg-wa-hover" : ""}`}>
+                  <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPhotoPreviewGroup(group); }} className="w-[52px] h-[52px] rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-xl shrink-0 overflow-hidden cursor-pointer">
+                    {group.photo ? <img src={group.photo} alt={group.name} className="w-full h-full object-cover" /> : group.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0 py-1 border-b border-wa-border">
+                    <div className="flex justify-between items-baseline gap-2">
+                      <h3 className="font-medium text-wa-text truncate text-[16px]">{group.name}</h3>
+                      <span className={`text-[12px] shrink-0 ${group.unread > 0 ? "text-wa-green font-medium" : "text-wa-muted"}`}>{group.time}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-0.5 gap-2">
+                      <p className="text-[14px] text-wa-secondary truncate">{group.lastMessage}</p>
+                      {group.unread > 0 && <span className="bg-wa-green text-white text-[12px] font-semibold rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1.5">{group.unread}</span>}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </>
+          )}
+
 
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-wa-panel border-t border-wa-border flex">
           <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-green">
@@ -577,6 +607,7 @@ export default function Home() {
                 onClose={() => setShowGroupInfo(false)}
                 onLeave={() => handleLeaveGroup(selectedGroup.id)}
                 onToggleOnlyAdmins={toggleOnlyAdmins}
+                onToggleFavorite={toggleFavorite}
               />
             )}
           </>
