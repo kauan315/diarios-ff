@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import ProfileScreen from "./ProfileScreen";
 import GroupInfoScreen from "./GroupInfoScreen";
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
 
 type Message = { id: number; sender: string; text: string; time: string; isMe: boolean; isAdmin?: boolean; audioData?: string; attachmentData?: string; attachmentName?: string; attachmentType?: string; pollData?: { question: string; options: { text: string; votes: string[] }[] }; sticker?: string };
 type Group = {
@@ -52,6 +53,12 @@ export default function Home() {
   const [hideProfilePhoto, setHideProfilePhoto] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [tempNickname, setTempNickname] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authMode, setAuthMode] = useState<"login" | "signup">("signup");
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authNotice, setAuthNotice] = useState("");
+  const [publicUserId, setPublicUserId] = useState("");
   const [screen, setScreen] = useState<"conversas" | "comunidades">("conversas");
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [groups, setGroups] = useState<Group[]>(DEFAULT_GROUPS);
@@ -99,9 +106,21 @@ export default function Home() {
     const savedHideProfilePhoto = loadFromStorage<boolean>("dff_hide_profile_photo", false);
     const savedGroups = loadFromStorage<Group[]>("dff_groups", DEFAULT_GROUPS);
     const savedMessages = loadFromStorage<Record<number, Message[]>>("dff_messages", DEFAULT_MESSAGES);
-    if (savedNick) { setNickname(savedNick); setIsLoggedIn(true); }
+    if (savedNick) { setNickname(savedNick); if (!isSupabaseConfigured) setIsLoggedIn(true); }
     setProfilePhoto(savedProfilePhoto); setHideProfilePhoto(savedHideProfilePhoto);
     setGroups(savedGroups); setMessages(savedMessages); setHydrated(true);
+    if (isSupabaseConfigured && supabase) {
+      supabase.auth.getSession().then(async ({ data }) => {
+        if (!data.session) return;
+        setIsLoggedIn(true);
+        const { data: profile } = await supabase!.from("profiles").select("nickname, public_id").eq("id", data.session.user.id).maybeSingle();
+        if (profile) { setNickname(profile.nickname || data.session.user.email?.split("@")[0] || "Jogador"); setPublicUserId(String(profile.public_id ?? "")); }
+      });
+      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (!session) { setIsLoggedIn(false); setPublicUserId(""); }
+      });
+      return () => authListener.subscription.unsubscribe();
+    }
   }, []);
 
   useEffect(() => {
@@ -138,7 +157,28 @@ export default function Home() {
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [currentMessages]);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    if (isSupabaseConfigured && supabase) {
+      if (!authEmail.trim() || authPassword.length < 6) { setAuthNotice("Informe um e-mail válido e uma senha com pelo menos 6 caracteres."); return; }
+      setAuthBusy(true); setAuthNotice("");
+      try {
+        if (authMode === "signup") {
+          const nick = tempNickname.trim() || authEmail.split("@")[0];
+          const { data, error } = await supabase.auth.signUp({ email: authEmail.trim(), password: authPassword, options: { data: { nickname: nick } } });
+          if (error) throw error;
+          if (!data.session) { setAuthNotice("Conta criada! Confira seu e-mail para confirmar o cadastro e depois entre."); return; }
+          const { data: profile } = await supabase.from("profiles").select("nickname, public_id").eq("id", data.user!.id).maybeSingle();
+          setNickname(profile?.nickname || nick); setPublicUserId(String(profile?.public_id ?? "")); setIsLoggedIn(true);
+        } else {
+          const { data, error } = await supabase.auth.signInWithPassword({ email: authEmail.trim(), password: authPassword });
+          if (error) throw error;
+          const { data: profile } = await supabase.from("profiles").select("nickname, public_id").eq("id", data.user.id).maybeSingle();
+          setNickname(profile?.nickname || data.user.email?.split("@")[0] || "Jogador"); setPublicUserId(String(profile?.public_id ?? "")); setIsLoggedIn(true);
+        }
+      } catch (error) { setAuthNotice(error instanceof Error ? error.message : "Não foi possível autenticar."); }
+      finally { setAuthBusy(false); }
+      return;
+    }
     if (tempNickname.trim().length < 2) return;
     const nick = tempNickname.trim();
     setNickname(nick); setIsLoggedIn(true); saveToStorage("dff_nickname", nick);
@@ -146,7 +186,8 @@ export default function Home() {
 
   const handleLogout = () => {
     if (!confirm("Sair da conta? Seus grupos e mensagens ficam salvos neste aparelho.")) return;
-    setIsLoggedIn(false); setNickname(""); setSelectedGroupId(null); setShowSettings(false);
+    if (isSupabaseConfigured && supabase) await supabase.auth.signOut();
+    setIsLoggedIn(false); setNickname(""); setPublicUserId(""); setSelectedGroupId(null); setShowSettings(false);
     localStorage.removeItem("dff_nickname");
   };
 
@@ -361,21 +402,27 @@ export default function Home() {
       <div className="min-h-screen bg-wa-bg flex items-center justify-center p-4">
         <div className="w-full max-w-sm">
           <div className="text-center mb-10">
-            <div className="w-24 h-24 bg-wa-green rounded-full flex items-center justify-center mx-auto mb-5">
-              <MessageCircle size={44} className="text-white" />
-            </div>
+            <div className="w-24 h-24 bg-wa-green rounded-full flex items-center justify-center mx-auto mb-5"><MessageCircle size={44} className="text-white" /></div>
             <h1 className="text-3xl font-light text-wa-text">Diários FF</h1>
             <p className="text-wa-secondary mt-2 text-sm">Chat e comunidades de Free Fire</p>
           </div>
-          <div className="bg-wa-panel rounded-xl p-6 space-y-5 shadow-sm">
-            <div>
-              <label className="text-xs text-wa-secondary mb-1.5 block uppercase tracking-wider">Nickname</label>
-              <input type="text" value={tempNickname} onChange={(e) => setTempNickname(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLogin()} placeholder="Seu nome no jogo" maxLength={20}
-                className="w-full bg-wa-input rounded-lg px-4 py-3.5 text-wa-text outline-none placeholder-wa-muted focus:ring-1 focus:ring-wa-green" autoFocus />
-            </div>
-            <button onClick={handleLogin} disabled={tempNickname.trim().length < 2}
-              className="w-full bg-wa-green text-white font-medium py-3.5 rounded-lg hover:bg-wa-green-dark transition disabled:opacity-40">Entrar</button>
+          <div className="bg-wa-panel rounded-xl p-6 space-y-4 shadow-sm">
+            {isSupabaseConfigured ? <>
+              <div className="grid grid-cols-2 gap-2 rounded-lg bg-wa-input p-1">
+                <button onClick={() => { setAuthMode("signup"); setAuthNotice(""); }} className={`rounded-md py-2 text-sm ${authMode === "signup" ? "bg-wa-green text-white" : "text-wa-secondary"}`}>Criar conta</button>
+                <button onClick={() => { setAuthMode("login"); setAuthNotice(""); }} className={`rounded-md py-2 text-sm ${authMode === "login" ? "bg-wa-green text-white" : "text-wa-secondary"}`}>Entrar</button>
+              </div>
+              {authMode === "signup" && <div><label className="text-xs text-wa-secondary mb-1.5 block">Nickname</label><input value={tempNickname} onChange={(e) => setTempNickname(e.target.value)} placeholder="Como você aparecerá" maxLength={24} className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none" /></div>}
+              <div><label className="text-xs text-wa-secondary mb-1.5 block">E-mail</label><input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="voce@exemplo.com" autoComplete="email" className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none" /></div>
+              <div><label className="text-xs text-wa-secondary mb-1.5 block">Senha</label><input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="Mínimo de 6 caracteres" autoComplete={authMode === "signup" ? "new-password" : "current-password"} onKeyDown={(e) => e.key === "Enter" && handleLogin()} className="w-full bg-wa-input rounded-lg px-4 py-3 text-wa-text outline-none" /></div>
+              {authNotice && <p role="status" className="text-sm text-wa-secondary break-words">{authNotice}</p>}
+              <button onClick={handleLogin} disabled={authBusy || !authEmail.trim() || authPassword.length < 6} className="w-full bg-wa-green text-white font-medium py-3.5 rounded-lg disabled:opacity-40">{authBusy ? "Aguarde..." : authMode === "signup" ? "Criar conta" : "Entrar"}</button>
+            </> : <>
+              <p className="text-sm text-wa-secondary">O login por e-mail está preparado, mas falta conectar as credenciais do Supabase para ativar contas e IDs compartilhados entre aparelhos.</p>
+              <label className="text-xs text-wa-secondary mb-1.5 block uppercase tracking-wider">Nickname temporário</label>
+              <input type="text" value={tempNickname} onChange={(e) => setTempNickname(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleLogin()} placeholder="Seu nome no jogo" maxLength={20} className="w-full bg-wa-input rounded-lg px-4 py-3.5 text-wa-text outline-none placeholder-wa-muted" autoFocus />
+              <button onClick={handleLogin} disabled={tempNickname.trim().length < 2} className="w-full bg-wa-green text-white font-medium py-3.5 rounded-lg disabled:opacity-40">Entrar no modo de demonstração</button>
+            </>}
           </div>
         </div>
       </div>
