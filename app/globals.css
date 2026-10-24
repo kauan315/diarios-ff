@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --whatsapp-green: #00a884;
+  --whatsapp-dark: #111b21;
+  --whatsapp-darker: #0b141a;
+}
+
+body {
+  background-color: var(--whatsapp-darker);
+  color: #e9edef;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
