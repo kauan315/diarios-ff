@@ -14,7 +14,7 @@ type Group = {
   id: number; name: string; description: string; members: number;
   lastMessage: string; time: string; unread: number;
   onlyAdminsCanSend: boolean; isJoined: boolean; createdByMe?: boolean;
-  photo?: string; memberNames?: string[]; isCommunity?: boolean;
+  photo?: string; memberNames?: string[]; isCommunity?: boolean; isPublic?: boolean;
 };
 
 const DEFAULT_GROUPS: Group[] = [
@@ -141,7 +141,7 @@ export default function Home() {
   };
 
   const handleJoinGroup = (groupId: number) => {
-    setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, isJoined: true, unread: 0 } : g));
+    setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, isJoined: true, unread: 0, memberNames: Array.from(new Set([...(g.memberNames || []), nickname])) } : g));
     setSelectedGroupId(groupId); setScreen("conversas"); setSearchQuery("");
   };
 
@@ -163,7 +163,7 @@ export default function Home() {
     const newGroup: Group = {
       id: newId, name: newGroupName.trim(), description: newGroupDesc.trim() || (createKind === "comunidade" ? "Comunidade criada no Diários FF" : "Grupo criado no Diários FF"),
       members: 1 + selectedNewMembers.length, lastMessage: createKind === "comunidade" ? "Comunidade criada" : "Grupo criado", time, unread: 0, onlyAdminsCanSend: newGroupOnlyAdmins, isJoined: true, createdByMe: true,
-      photo: newGroupPhoto, memberNames: [nickname, ...selectedNewMembers], isCommunity: createKind === "comunidade",
+      photo: newGroupPhoto, memberNames: [nickname, ...selectedNewMembers], isCommunity: createKind === "comunidade", isPublic: newGroupPrivacy === "publico",
     };
     setGroups((prev) => [newGroup, ...prev]);
     setMessages((prev) => ({ ...prev, [newId]: [{ id: 1, sender: nickname, text: `${createKind === "comunidade" ? "Comunidade" : "Grupo"} "${newGroup.name}" criado por ${nickname}`, time, isMe: true, isAdmin: true }] }));
