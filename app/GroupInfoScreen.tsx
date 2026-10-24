@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   ArrowLeft, MoreVertical, Search, Shield, Image as ImageIcon,
   Heart, Trash2, LogOut, Flag,
-  Eye, ChevronRight,
+  ChevronRight,
 } from "lucide-react";
 
 type Group = {
@@ -248,13 +248,7 @@ export default function GroupInfoScreen({
               </div>
             </button>
 
-            <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
-              <Eye size={22} className="text-wa-secondary" />
-              <div>
-                <p className="text-[15px] text-wa-text">Privacidade avançada da conversa</p>
-                <p className="text-xs text-wa-secondary">Desativado</p>
-              </div>
-            </button>
+            
             <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
               <Heart size={22} className="text-wa-secondary" />
               <p className="text-[15px] text-wa-text">Adicionar aos favoritos</p>
