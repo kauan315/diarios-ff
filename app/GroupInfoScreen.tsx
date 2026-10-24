@@ -23,6 +23,7 @@ type Props = {
   nickname: string;
   onClose: () => void;
   onLeave: () => void;
+  onClearConversation: () => void;
   onToggleOnlyAdmins: () => void;
   onToggleFavorite: () => void;
 };
@@ -43,6 +44,7 @@ export default function GroupInfoScreen({
   nickname,
   onClose,
   onLeave,
+  onClearConversation,
   onToggleOnlyAdmins,
   onToggleFavorite,
 }: Props) {
@@ -50,9 +52,42 @@ export default function GroupInfoScreen({
   const [descExpanded, setDescExpanded] = useState(false);
   const [mediaVisibilityOpen, setMediaVisibilityOpen] = useState(false);
   const [mediaVisibility, setMediaVisibility] = useState<"Sim" | "Não" | "Padrão">("Padrão");
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("Spam");
+  const [reportSent, setReportSent] = useState(false);
 
   return (
     <div className="absolute inset-0 bg-wa-bg z-20 flex flex-col">
+      {reportOpen && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-5">
+          <div className="w-full max-w-sm rounded-2xl bg-wa-panel p-5 shadow-xl">
+            {reportSent ? (
+              <>
+                <h3 className="text-lg font-medium text-wa-text mb-2">Denúncia registrada</h3>
+                <p className="text-sm text-wa-secondary">Sua denúncia deste grupo foi registrada nesta demonstração.</p>
+                <button onClick={() => setReportOpen(false)} className="mt-5 w-full rounded-lg bg-wa-green py-2.5 text-sm font-medium text-white">Concluir</button>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-medium text-wa-text mb-2">Denunciar grupo</h3>
+                <p className="text-sm text-wa-secondary mb-4">Por que você deseja denunciar “{group.name}”?</p>
+                <div className="space-y-1">
+                  {["Spam", "Golpe ou fraude", "Conteúdo impróprio", "Assédio ou ameaças", "Outro motivo"].map((reason) => (
+                    <label key={reason} className="flex items-center gap-3 rounded-lg px-2 py-3 hover:bg-wa-hover cursor-pointer">
+                      <input type="radio" name="report-reason" checked={reportReason === reason} onChange={() => setReportReason(reason)} className="accent-[#00a884]" />
+                      <span className="text-sm text-wa-text">{reason}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex gap-3 mt-4">
+                  <button onClick={() => setReportOpen(false)} className="flex-1 rounded-lg py-2.5 text-sm text-wa-secondary hover:bg-wa-hover">Cancelar</button>
+                  <button onClick={() => setReportSent(true)} className="flex-1 rounded-lg bg-wa-danger py-2.5 text-sm font-medium text-white">Enviar denúncia</button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       {mediaVisibilityOpen && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 p-5">
           <div className="w-full max-w-sm rounded-2xl bg-wa-panel p-5 shadow-xl">
@@ -259,7 +294,7 @@ export default function GroupInfoScreen({
             </button>
             
             
-            <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left text-wa-danger">
+            <button onClick={onClearConversation} className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left text-wa-danger">
               <Trash2 size={22} />
               <p className="text-[15px]">Limpar conversa</p>
             </button>
@@ -270,7 +305,7 @@ export default function GroupInfoScreen({
               <LogOut size={22} />
               <p className="text-[15px]">Sair do grupo</p>
             </button>
-            <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left text-wa-danger">
+            <button onClick={() => { setReportOpen(true); setReportSent(false); }} className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left text-wa-danger">
               <Flag size={22} />
               <p className="text-[15px]">Denunciar grupo</p>
             </button>
