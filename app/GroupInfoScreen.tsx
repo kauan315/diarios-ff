@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  ArrowLeft, MoreVertical, Search, Shield, Bell, Image as ImageIcon,
+  ArrowLeft, MoreVertical, Search, Shield, Image as ImageIcon,
   Heart, Trash2, LogOut, Flag,
   Eye, ChevronRight,
 } from "lucide-react";
@@ -185,13 +185,7 @@ export default function GroupInfoScreen({
 
         {tab === "config" && (
           <div className="bg-wa-panel">
-            <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
-              <Bell size={22} className="text-wa-secondary" />
-              <div>
-                <p className="text-[15px] text-wa-text">Notificações</p>
-                <p className="text-xs text-wa-secondary">Destaques</p>
-              </div>
-            </button>
+            
             <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
               <ImageIcon size={22} className="text-wa-secondary" />
               <p className="text-[15px] text-wa-text">Visibilidade de mídia</p>
