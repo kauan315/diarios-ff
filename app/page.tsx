@@ -643,6 +643,7 @@ export default function Home() {
           hideProfilePhoto={hideProfilePhoto}
           onProfilePhotoChange={setProfilePhoto}
           onToggleHideProfilePhoto={() => setHideProfilePhoto((value) => !value)}
+          contactNames={availableMembers}
           onClose={() => setShowSettings(false)}
           onLogout={handleLogout}
         />
