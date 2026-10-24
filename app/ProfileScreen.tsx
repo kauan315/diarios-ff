@@ -252,6 +252,23 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
               <p className="text-xs text-wa-secondary">Configurações da sua conta</p>
             </div>
           </div>
+          <div className="bg-wa-panel mt-2 px-4 py-5 flex flex-col items-center">
+            <div className="w-20 h-20 rounded-full bg-wa-green overflow-hidden flex items-center justify-center text-white font-semibold text-3xl">
+              {profilePhoto ? <img src={profilePhoto} alt="Foto de perfil" className="w-full h-full object-cover" /> : nickname.charAt(0).toUpperCase()}
+            </div>
+            <p className="mt-2 text-sm font-medium text-wa-text">{nickname}</p>
+            {publicUserId ? (
+              <button
+                onClick={() => { navigator.clipboard?.writeText(publicUserId).then(() => alert("ID copiado!")).catch(() => alert("Seu ID: " + publicUserId)); }}
+                className="mt-1 rounded-full px-3 py-1.5 text-sm text-wa-secondary hover:bg-wa-hover"
+                aria-label="Copiar ID da conta"
+              >
+                ID: {publicUserId} · tocar para copiar
+              </button>
+            ) : (
+              <p className="mt-1 text-xs text-wa-secondary">ID ainda não carregado</p>
+            )}
+          </div>
           <div className="bg-wa-panel mt-2">
             <div className="w-full flex items-center gap-4 px-4 py-4 text-left">
               <KeyRound size={22} className="text-wa-secondary shrink-0" />
