@@ -724,15 +724,16 @@ export default function Home() {
               )}
               {currentMessages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}>
-                  <div className={`dff-message-bubble ${msg.isMe ? "dff-message-out bg-wa-bubble rounded-tr-none" : "dff-message-in bg-wa-incoming rounded-tl-none"} rounded-lg px-2.5 py-1.5 max-w-[85%] md:max-w-[65%] shadow-sm`}>
+                  <div className={`dff-message-bubble ${msg.sticker ? "bg-transparent shadow-none px-0 py-0 max-w-[85%]" : `${msg.isMe ? "dff-message-out bg-wa-bubble rounded-tr-none" : "dff-message-in bg-wa-incoming rounded-tl-none"} rounded-lg px-2.5 py-1.5 max-w-[85%] md:max-w-[65%] shadow-sm`}`}>
                     {!msg.isMe && (
                       <p className="text-[13px] text-wa-green-dark font-medium mb-0.5">
                         {msg.sender}{msg.isAdmin && <span className="text-wa-muted font-normal"> · Admin</span>}
                       </p>
                     )}
                     {msg.sticker ? (
-                      <div className="flex items-center justify-center py-1 px-2" aria-label="Figurinha enviada">
-                        <span className="text-[76px] leading-none select-none" style={{ filter: "drop-shadow(0 2px 1px rgba(0,0,0,0.15))" }}>{msg.sticker}</span>
+                      <div className="flex flex-col items-end gap-1" aria-label="Figurinha enviada">
+                        <span className="text-[64px] sm:text-[72px] leading-none select-none" style={{ filter: "drop-shadow(0 1px 1px rgba(0,0,0,0.08))" }}>{msg.sticker}</span>
+                        <span className="rounded-md bg-black/5 px-1.5 py-0.5 text-[10px] text-wa-secondary">{msg.time}</span>
                       </div>
                     ) : msg.pollData ? (
                       <div className="min-w-[220px] space-y-2 py-1">
@@ -749,14 +750,17 @@ export default function Home() {
                         <p className="text-[11px] text-wa-secondary">{msg.pollData.options.reduce((sum, item) => sum + item.votes.length, 0)} votos · toque em uma opção para votar</p>
                       </div>
                     ) : msg.attachmentData && msg.attachmentType?.startsWith("image/") ? (
-                      <div className="space-y-1"><img src={msg.attachmentData} alt={msg.attachmentName || "Imagem enviada"} className="max-w-full max-h-64 rounded-lg object-contain" /><p className="text-[12px]">{msg.attachmentName || "Foto"}</p></div>
+                      <div className="space-y-1"><img src={msg.attachmentData} alt={msg.attachmentName || "Imagem enviada"} className="block max-w-[min(260px,65vw)] max-h-[300px] rounded-lg object-contain" />{msg.attachmentName && msg.attachmentName !== "image" && <p className="text-[11px] text-wa-secondary">{msg.attachmentName}</p>}</div>
                     ) : msg.audioData ? (
-                      <div className="min-w-[220px] py-1">
-                        <audio controls preload="metadata" src={msg.audioData} className="w-full max-w-[280px]" />
-                        <p className="text-[12px] text-wa-secondary mt-1">{msg.attachmentName || "Mensagem de áudio"}</p>
+                      <div className="flex w-[min(245px,62vw)] items-center gap-2 py-0.5">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-wa-green text-white"><Mic size={18} /></span>
+                        <div className="min-w-0 flex-1">
+                          <audio controls preload="metadata" src={msg.audioData} className="dff-audio-player block h-9 w-full min-w-0" />
+                          <p className="mt-0.5 truncate text-[10px] text-wa-secondary">{msg.attachmentName || "Mensagem de áudio"}</p>
+                        </div>
                       </div>
                     ) : msg.attachmentData ? (
-                      <a href={msg.attachmentData} download={msg.attachmentName || "arquivo"} className="flex items-center gap-2 underline break-all text-[14px]"><FileText size={22} />{msg.attachmentName || "Baixar arquivo"}</a>
+                      <a href={msg.attachmentData} download={msg.attachmentName || "arquivo"} className="flex max-w-[240px] items-center gap-2 break-all rounded-lg bg-black/5 px-2.5 py-2 text-[13px] text-wa-text underline"><FileText size={20} className="shrink-0" />{msg.attachmentName || "Baixar arquivo"}</a>
                     ) : (
                       <p className="text-[14.2px] text-wa-text leading-snug whitespace-pre-wrap break-words">{msg.text}</p>
                     )}
