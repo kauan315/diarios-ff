@@ -6,6 +6,7 @@ import {
   Check, Crown, Sparkles, ShieldCheck, TrendingUp, Users, Zap, Star,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
 
 type Props = {
   nickname: string;
@@ -34,6 +35,9 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
   const [lastSeen, setLastSeen] = useState<"todos" | "ninguem">("todos");
   const [hiddenPhotoContacts, setHiddenPhotoContacts] = useState<string[]>([]);
   const [durationDays, setDurationDays] = useState("7");
+  const [accountEmail, setAccountEmail] = useState("");
+  const [passwordNotice, setPasswordNotice] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
 
   useEffect(() => {
     try {
@@ -222,7 +226,7 @@ export default function ProfileScreen({ nickname, publicUserId = "", onClose, on
               <KeyRound size={22} className="text-wa-secondary shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-[16px] text-wa-text">Gmail da conta</p>
-                <p className="text-[13px] text-wa-secondary mt-0.5">E-mail vinculado à sua conta</p>
+                <p className="text-[13px] text-wa-secondary mt-0.5 break-all">{accountEmail || (isSupabaseConfigured ? "Carregando e-mail da conta..." : "Conta de demonstração — nenhum e-mail vinculado")}</p>
               </div>
             </div>
             <div className="mx-4 border-b border-wa-border" />
