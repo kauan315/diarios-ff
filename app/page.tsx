@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Search, MessageCircle, Users, Settings, Plus, ArrowLeft, MoreVertical,
   Send, Smile, Paperclip, Info, Shield, UserPlus, LogOut, X, Compass, Bot, Palette,
-  MessageCirclePlus, Pin, Mic, ImagePlus, Check, Lock, Globe, Heart, Paperclip, Image, FileAudio, FileText, ListChecks,
+  MessageCirclePlus, Pin, Mic, ImagePlus, Check, Lock, Globe, Heart, Image, FileAudio, FileText, ListChecks,
 } from "lucide-react";
 import ProfileScreen from "./ProfileScreen";
 import GroupInfoScreen from "./GroupInfoScreen";
