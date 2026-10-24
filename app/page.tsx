@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Search, MessageCircle, Users, Settings, Plus, ArrowLeft, MoreVertical,
   Send, Smile, Paperclip, Info, Shield, UserPlus, LogOut, X, Compass, Bot, Palette,
+  Camera, Phone, CircleDot, MessageCirclePlus, Pin,
 } from "lucide-react";
 import ProfileScreen from "./ProfileScreen";
 import GroupInfoScreen from "./GroupInfoScreen";
@@ -16,11 +17,11 @@ type Group = {
 };
 
 const DEFAULT_GROUPS: Group[] = [
-  { id: 1, name: "Diário Free Fire BR", description: "Comunidade principal de diários do Free Fire Brasil. Respeitem as regras e divirtam-se!", members: 1240, lastMessage: "Alguém upou o rank hoje?", time: "14:32", unread: 0, onlyAdminsCanSend: false, isJoined: false },
-  { id: 2, name: "Clãs e Organizações", description: "Encontre e entre em clãs. Divulgue sua organização aqui.", members: 890, lastMessage: "Procuro membros ativos", time: "13:15", unread: 0, onlyAdminsCanSend: false, isJoined: false },
-  { id: 3, name: "Dicas e Estratégias", description: "Compartilhe dicas de gameplay, loadouts e estratégias.", members: 2100, lastMessage: "Melhor loadout da temporada", time: "11:48", unread: 0, onlyAdminsCanSend: false, isJoined: false },
-  { id: 4, name: "Diário Ranked Elite", description: "Só jogadores Elite e acima. Ambiente sério.", members: 456, lastMessage: "Somente admins podem enviar mensagens", time: "10:02", unread: 0, onlyAdminsCanSend: true, isJoined: false },
-  { id: 5, name: "Free Fire Latinoamérica", description: "Comunidad de Free Fire para jugadores de Latinoamérica", members: 3200, lastMessage: "¿Alguien para ranked?", time: "09:45", unread: 0, onlyAdminsCanSend: false, isJoined: false },
+  { id: 1, name: "Diário Free Fire BR", description: "Comunidade principal de diários do Free Fire Brasil.", members: 1240, lastMessage: "Alguém upou o rank hoje?", time: "14:32", unread: 3, onlyAdminsCanSend: false, isJoined: false },
+  { id: 2, name: "Clãs e Organizações", description: "Encontre e entre em clãs.", members: 890, lastMessage: "Procuro membros ativos", time: "13:15", unread: 0, onlyAdminsCanSend: false, isJoined: false },
+  { id: 3, name: "Dicas e Estratégias", description: "Compartilhe dicas de gameplay.", members: 2100, lastMessage: "Melhor loadout da temporada", time: "11:48", unread: 0, onlyAdminsCanSend: false, isJoined: false },
+  { id: 4, name: "Diário Ranked Elite", description: "Só jogadores Elite e acima.", members: 456, lastMessage: "Somente admins podem enviar mensagens", time: "10:02", unread: 0, onlyAdminsCanSend: true, isJoined: false },
+  { id: 5, name: "Free Fire Latinoamérica", description: "Comunidad de Free Fire Latinoamérica", members: 3200, lastMessage: "¿Alguien para ranked?", time: "09:45", unread: 0, onlyAdminsCanSend: false, isJoined: false },
 ];
 
 const DEFAULT_MESSAGES: Record<number, Message[]> = {
@@ -219,11 +220,17 @@ export default function Home() {
         </div>
         <div className="fixed bottom-0 left-0 right-0 bg-wa-panel border-t border-wa-border flex">
           <button onClick={() => { setScreen("conversas"); setSelectedGroupId(null); setSearchQuery(""); }}
-            className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-secondary">
-            <MessageCircle size={22} /><span className="text-[11px]">Conversas</span>
+            className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
+            <MessageCircle size={24} /><span className="text-[11px]">Conversas</span>
           </button>
-          <button className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-green">
-            <Users size={22} /><span className="text-[11px] font-medium">Comunidades</span>
+          <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
+            <CircleDot size={24} /><span className="text-[11px]">Atualizações</span>
+          </button>
+          <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-green">
+            <Users size={24} /><span className="text-[11px] font-medium">Comunidades</span>
+          </button>
+          <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
+            <Phone size={24} /><span className="text-[11px]">Ligações</span>
           </button>
         </div>
         {showCreateGroup && (
@@ -259,24 +266,22 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-wa-bg overflow-hidden">
       <div className={`${showChat ? "hidden md:flex" : "flex"} w-full md:w-[400px] flex-col bg-wa-panel border-r border-wa-border`}>
-        <div className="bg-wa-header px-4 py-2.5 flex items-center justify-between shrink-0 h-[60px]">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-sm">{nickname.charAt(0).toUpperCase()}</div>
-            <span className="text-wa-text font-medium">{nickname}</span>
+        <div className="bg-wa-panel px-4 pt-3 pb-1 shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-[22px] font-semibold text-wa-green">Diários FF</h1>
+            <div className="flex items-center gap-5 text-wa-secondary">
+              <button className="hover:text-wa-text" title="Câmera"><Camera size={22} /></button>
+              <button onClick={() => setShowSettings(true)} className="hover:text-wa-text" title="Mais opções"><MoreVertical size={22} /></button>
+            </div>
           </div>
-          <div className="flex items-center gap-4 text-wa-secondary">
-            <button onClick={() => setShowSettings(true)} className="hover:text-wa-text" title="Configurações"><Settings size={20} /></button>
-            <button onClick={() => setShowSettings(true)} className="hover:text-wa-text" title="Mais opções"><MoreVertical size={20} /></button>
-          </div>
-        </div>
-        <div className="px-3 py-2 bg-wa-panel shrink-0">
-          <div className="flex items-center bg-wa-input rounded-lg px-3 py-1.5 gap-3">
-            <Search size={16} className="text-wa-secondary" />
+          <div className="flex items-center bg-wa-input rounded-full px-4 py-2.5 gap-3 mb-1">
+            <Search size={18} className="text-wa-secondary" />
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pesquisar" className="bg-transparent outline-none text-sm w-full text-wa-text placeholder-wa-muted py-1" />
+              placeholder="Pesquisar diários e conversas" className="bg-transparent outline-none text-[15px] w-full text-wa-text placeholder-wa-muted" />
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
+
+        <div className="flex-1 overflow-y-auto pb-24 md:pb-0">
           {myChats.length === 0 ? (
             <div className="p-10 text-center text-wa-muted">
               <MessageCircle size={40} className="mx-auto mb-3 opacity-30" />
@@ -286,32 +291,65 @@ export default function Home() {
             </div>
           ) : myChats.map((group) => (
             <button key={group.id} onClick={() => { setSelectedGroupId(group.id); setShowGroupInfo(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-3 hover:bg-wa-hover text-left ${selectedGroupId === group.id ? "bg-wa-hover" : ""}`}>
-              <div className="w-12 h-12 rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-lg shrink-0">{group.name.charAt(0)}</div>
-              <div className="flex-1 min-w-0 border-b border-wa-border pb-3">
-                <div className="flex justify-between items-baseline">
-                  <h3 className="font-medium text-wa-text truncate text-[15px]">{group.name}</h3>
-                  <span className={`text-[11px] shrink-0 ml-2 ${group.unread > 0 ? "text-wa-green" : "text-wa-muted"}`}>{group.time}</span>
+              className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-wa-hover text-left ${selectedGroupId === group.id ? "bg-wa-hover" : ""}`}>
+              <div className="w-[52px] h-[52px] rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-xl shrink-0">
+                {group.name.charAt(0)}
+              </div>
+              <div className="flex-1 min-w-0 py-1 border-b border-wa-border">
+                <div className="flex justify-between items-baseline gap-2">
+                  <h3 className="font-medium text-wa-text truncate text-[16px]">{group.name}</h3>
+                  <span className={`text-[12px] shrink-0 ${group.unread > 0 ? "text-wa-green font-medium" : "text-wa-muted"}`}>
+                    {group.time}
+                  </span>
                 </div>
-                <div className="flex justify-between items-center mt-0.5">
-                  <p className="text-[13px] text-wa-secondary truncate">{group.lastMessage}</p>
-                  {group.unread > 0 && (
-                    <span className="bg-wa-green text-white text-[11px] font-medium rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 ml-2">{group.unread}</span>
-                  )}
+                <div className="flex justify-between items-center mt-0.5 gap-2">
+                  <p className="text-[14px] text-wa-secondary truncate">{group.lastMessage}</p>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {group.unread > 0 && (
+                      <span className="bg-wa-green text-white text-[12px] font-semibold rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1.5">
+                        {group.unread}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </button>
           ))}
         </div>
+
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-wa-panel border-t border-wa-border flex">
-          <button className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-green">
-            <MessageCircle size={22} /><span className="text-[11px] font-medium">Conversas</span>
+          <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-green">
+            <div className="relative">
+              <MessageCircle size={24} />
+              {myChats.some(g => g.unread > 0) && (
+                <span className="absolute -top-1 -right-2 bg-wa-green text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                  {myChats.reduce((a, g) => a + g.unread, 0)}
+                </span>
+              )}
+            </div>
+            <span className="text-[11px] font-medium">Conversas</span>
+          </button>
+          <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
+            <CircleDot size={24} />
+            <span className="text-[11px]">Atualizações</span>
           </button>
           <button onClick={() => { setScreen("comunidades"); setSelectedGroupId(null); setSearchQuery(""); }}
-            className="flex-1 py-2.5 flex flex-col items-center gap-0.5 text-wa-secondary">
-            <Users size={22} /><span className="text-[11px]">Comunidades</span>
+            className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
+            <Users size={24} />
+            <span className="text-[11px]">Comunidades</span>
+          </button>
+          <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
+            <Phone size={24} />
+            <span className="text-[11px]">Ligações</span>
           </button>
         </div>
+
+        <button
+          onClick={() => { setScreen("comunidades"); setSearchQuery(""); }}
+          className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-wa-green rounded-2xl shadow-lg flex items-center justify-center text-white z-10"
+        >
+          <MessageCirclePlus size={26} />
+        </button>
       </div>
 
       <div className={`${showChat ? "flex" : "hidden md:flex"} flex-1 flex-col relative bg-wa-bg`}>
