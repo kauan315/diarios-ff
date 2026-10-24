@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import {
   Search, MessageCircle, Users, Settings, Plus, ArrowLeft, MoreVertical,
   Send, Smile, Paperclip, Info, Shield, UserPlus, LogOut, X, Compass, Bot, Palette,
-  Camera, Phone, CircleDot, MessageCirclePlus, Pin, Video, Mic,
+  Camera, MessageCirclePlus, Pin, Mic,
 } from "lucide-react";
 import ProfileScreen from "./ProfileScreen";
 import GroupInfoScreen from "./GroupInfoScreen";
@@ -223,14 +223,8 @@ export default function Home() {
             className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
             <MessageCircle size={24} /><span className="text-[11px]">Conversas</span>
           </button>
-          <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
-            <CircleDot size={24} /><span className="text-[11px]">Atualizações</span>
-          </button>
           <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-green">
             <Users size={24} /><span className="text-[11px] font-medium">Comunidades</span>
-          </button>
-          <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
-            <Phone size={24} /><span className="text-[11px]">Ligações</span>
           </button>
         </div>
         {showCreateGroup && (
@@ -327,15 +321,9 @@ export default function Home() {
             </div>
             <span className="text-[11px] font-medium">Conversas</span>
           </button>
-          <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
-            <CircleDot size={24} /><span className="text-[11px]">Atualizações</span>
-          </button>
           <button onClick={() => { setScreen("comunidades"); setSelectedGroupId(null); setSearchQuery(""); }}
             className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
             <Users size={24} /><span className="text-[11px]">Comunidades</span>
-          </button>
-          <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-secondary">
-            <Phone size={24} /><span className="text-[11px]">Ligações</span>
           </button>
         </div>
 
@@ -367,8 +355,6 @@ export default function Home() {
                   {selectedGroup.onlyAdminsCanSend && " · Somente admins"}
                 </p>
               </div>
-              <button className="text-wa-secondary p-2" title="Vídeo"><Video size={22} /></button>
-              <button className="text-wa-secondary p-2" title="Ligar"><Phone size={22} /></button>
               <button className="text-wa-secondary p-2" onClick={() => setShowGroupInfo(true)}><MoreVertical size={20} /></button>
             </div>
 
@@ -380,7 +366,7 @@ export default function Home() {
               </div>
               <div className="flex justify-center px-2">
                 <div className="bg-[#fff3c9] text-[#54656f] text-[12.5px] px-3 py-2 rounded-lg max-w-[90%] text-center leading-snug shadow-sm">
-                  🔒 As mensagens e ligações são protegidas com a criptografia de ponta a ponta. Somente as pessoas que fazem parte da conversa podem ler, ouvir e compartilhar esse conteúdo.{" "}
+                  🔒 As mensagens são protegidas com a criptografia de ponta a ponta. Somente as pessoas que fazem parte da conversa podem ler e compartilhar esse conteúdo.{" "}
                   <span className="text-[#027eb5] font-medium">Saiba mais</span>
                 </div>
               </div>
