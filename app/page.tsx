@@ -48,6 +48,30 @@ function saveToStorage(key: string, value: unknown) {
 }
 
 export default function Home() {
+  // Apply the saved theme on app startup, even before the settings screen is opened.
+  useEffect(() => {
+    try {
+      const root = document.documentElement;
+      let color = localStorage.getItem("dff_theme_color");
+      let mode = localStorage.getItem("dff_theme_mode");
+      let preset = localStorage.getItem("dff_theme_preset");
+      if (preset === "classic-green" || (!preset && color === "green") || (!preset && !color)) {
+        color = "blue";
+        preset = "sky-blue";
+        localStorage.setItem("dff_theme_color", color);
+        localStorage.setItem("dff_theme_preset", preset);
+      }
+      if (color && ["green", "pink", "blue", "red"].includes(color)) root.dataset.theme = color;
+      else root.dataset.theme = "blue";
+      root.dataset.mode = mode === "dark" ? "dark" : "light";
+      root.dataset.preset = preset && ["classic-green", "pink-candy", "sky-blue", "ruby-red", "neon-cyber", "galaxy-purple", "royal-gold", "toxic-acid", "sunset-fire", "midnight"].includes(preset) ? preset : "sky-blue";
+      if (!mode) localStorage.setItem("dff_theme_mode", "light");
+    } catch {
+      document.documentElement.dataset.theme = "blue";
+      document.documentElement.dataset.mode = "light";
+      document.documentElement.dataset.preset = "sky-blue";
+    }
+  }, []);
   const [nickname, setNickname] = useState("");
   const [profilePhoto, setProfilePhoto] = useState("");
   const [hideProfilePhoto, setHideProfilePhoto] = useState(false);
