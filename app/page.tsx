@@ -465,7 +465,7 @@ export default function Home() {
               ))}
             </>
           )}
-
+        </div>
 
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-wa-panel border-t border-wa-border flex">
           <button className="flex-1 py-2 flex flex-col items-center gap-0.5 text-wa-green">
