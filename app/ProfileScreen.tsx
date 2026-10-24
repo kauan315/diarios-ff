@@ -14,11 +14,12 @@ type Props = {
   profilePhoto: string;
   hideProfilePhoto: boolean;
   onProfilePhotoChange: (photo: string) => void;
+  onNicknameChange: (nickname: string) => void;
   onToggleHideProfilePhoto: () => void;
   contactNames?: string[];
 };
 
-export default function ProfileScreen({ nickname, onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onToggleHideProfilePhoto, contactNames = [] }: Props) {
+export default function ProfileScreen({ nickname, onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onNicknameChange, onToggleHideProfilePhoto, contactNames = [] }: Props) {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
@@ -27,6 +28,8 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
   const [themeColor, setThemeColor] = useState("green");
   const [themeMode, setThemeMode] = useState<"light" | "dark">("dark");
   const [showAccount, setShowAccount] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [draftNickname, setDraftNickname] = useState(nickname);
   const [lastSeen, setLastSeen] = useState<"todos" | "ninguem">("todos");
   const [hiddenPhotoContacts, setHiddenPhotoContacts] = useState<string[]>([]);
   const [durationDays, setDurationDays] = useState("7");
@@ -92,7 +95,7 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
         <div className="flex items-center gap-4 text-wa-secondary">
           <button className="p-1"><Search size={22} /></button>
           <button className="p-1"><QrCode size={22} /></button>
-          <button className="p-1"><Pencil size={20} /></button>
+          <button onClick={() => { setDraftNickname(nickname); setShowEditProfile(true); }} className="p-1" aria-label="Editar perfil"><Pencil size={20} /></button>
         </div>
       </div>
 
@@ -102,9 +105,9 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
             <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-white text-wa-text text-xs px-3 py-1 rounded-full shadow-sm border border-wa-border z-10 whitespace-nowrap">
               Como está seu humor?
             </div>
-            <button onClick={() => photoInputRef.current?.click()} className="w-28 h-28 rounded-full bg-wa-green overflow-hidden flex items-center justify-center text-white font-semibold text-4xl mt-6 mb-3 shadow-md" aria-label="Escolher foto de perfil">
+            <div className="w-28 h-28 rounded-full bg-wa-green overflow-hidden flex items-center justify-center text-white font-semibold text-4xl mt-6 mb-3 shadow-md">
               {profilePhoto ? <img src={profilePhoto} alt="Foto de perfil" className="w-full h-full object-cover" /> : nickname.charAt(0).toUpperCase()}
-            </button>
+            </div>
             <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={(event) => {
               const file = event.target.files?.[0];
               if (!file) return;
@@ -127,7 +130,6 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
               reader.readAsDataURL(file);
               event.target.value = "";
             }} />
-            <p className="text-xs text-wa-secondary -mt-1 mb-2">Toque na foto para alterar</p>
             <button className="flex items-center gap-1 text-wa-text text-xl font-medium">
               {nickname}
               <ChevronDown size={18} className="text-wa-secondary" />
@@ -167,6 +169,40 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
           </button>
         </div>
       </div>
+      {showEditProfile && (
+        <div className="fixed inset-0 z-[85] bg-wa-bg flex flex-col">
+          <div className="bg-wa-panel px-3 py-3 flex items-center gap-3 border-b border-wa-border shrink-0">
+            <button onClick={() => setShowEditProfile(false)} className="text-wa-secondary p-1" aria-label="Voltar ao perfil">
+              <ArrowLeft size={24} />
+            </button>
+            <div>
+              <h2 className="text-lg font-semibold text-wa-text">Editar perfil</h2>
+              <p className="text-xs text-wa-secondary">Altere sua foto e seu nome</p>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-5">
+            <div className="flex flex-col items-center py-5">
+              <div className="w-28 h-28 rounded-full bg-wa-green overflow-hidden flex items-center justify-center text-white font-semibold text-4xl">
+                {profilePhoto ? <img src={profilePhoto} alt="Foto de perfil" className="w-full h-full object-cover" /> : nickname.charAt(0).toUpperCase()}
+              </div>
+              <button onClick={() => photoInputRef.current?.click()} className="mt-3 rounded-full px-4 py-2 text-sm font-medium text-wa-green border border-wa-green/40">
+                Alterar foto
+              </button>
+            </div>
+            <label className="block text-sm text-wa-secondary mb-2" htmlFor="edit-profile-nickname">Nome do perfil</label>
+            <input id="edit-profile-nickname" value={draftNickname} onChange={(event) => setDraftNickname(event.target.value)} maxLength={30} placeholder="Digite seu nome" className="w-full rounded-xl border border-wa-border bg-wa-panel text-wa-text px-4 py-3 outline-none focus:border-wa-green" />
+            <p className="text-xs text-wa-secondary mt-2">Máximo de 30 caracteres.</p>
+            <button onClick={() => {
+              const cleaned = draftNickname.trim();
+              if (!cleaned) { alert("Digite um nome para o perfil."); return; }
+              onNicknameChange(cleaned);
+              setShowEditProfile(false);
+            }} className="w-full mt-6 rounded-xl bg-wa-green text-white font-semibold py-3.5">
+              Salvar alterações
+            </button>
+          </div>
+        </div>
+      )}
       {showAccount && (
         <div className="fixed inset-0 z-[65] bg-wa-bg flex flex-col">
           <div className="bg-wa-panel px-3 py-3 flex items-center gap-3 border-b border-wa-border shrink-0">
