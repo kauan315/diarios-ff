@@ -60,7 +60,7 @@ export default function GroupInfoScreen({
   onPromoteAllMembers,
   onToggleFavorite,
 }: Props) {
-  const [tab, setTab] = useState<"membros" | "midias" | "config">("membros");
+  const [tab, setTab] = useState<"membros" | "midias" | "config" | "permissoes">("membros");
   const [descExpanded, setDescExpanded] = useState(false);
   const [mediaVisibilityOpen, setMediaVisibilityOpen] = useState(false);
   const [mediaVisibility, setMediaVisibility] = useState<"Sim" | "Não" | "Padrão">("Padrão");
@@ -161,7 +161,7 @@ export default function GroupInfoScreen({
 
         </div>
 
-        <div className="bg-wa-panel mt-2 flex border-b border-wa-border sticky top-0 z-10">
+        {tab !== "permissoes" && <div className="bg-wa-panel mt-2 flex border-b border-wa-border sticky top-0 z-10">
           {(
             [
               { id: "membros" as const, label: "Membros" },
@@ -182,7 +182,7 @@ export default function GroupInfoScreen({
               )}
             </button>
           ))}
-        </div>
+        </div>}
 
         {tab === "membros" && (
           <div className="bg-wa-panel">
@@ -231,6 +231,42 @@ export default function GroupInfoScreen({
           </div>
         )}
 
+        {tab === "permissoes" && canManage && (
+          <div className="bg-wa-panel min-h-full">
+            <button onClick={() => setTab("config")} className="w-full flex items-center gap-3 px-4 py-4 text-left border-b border-wa-border hover:bg-wa-hover">
+              <ArrowLeft size={22} className="text-wa-secondary" />
+              <span className="text-[17px] font-medium text-wa-text">Permissões do grupo</span>
+            </button>
+            <p className="px-4 pt-5 pb-2 text-sm text-wa-secondary">Quem pode fazer estas ações?</p>
+            {[
+              { title: "Adicionar outros participantes", subtitle: group.requireAdminApproval ? "Somente administradores podem adicionar participantes" : "Todos os participantes podem adicionar outros", active: !!group.requireAdminApproval, action: onToggleAdminApproval },
+              { title: "Enviar mensagens", subtitle: group.onlyAdminsCanSend ? "Somente administradores" : "Todos os participantes", active: group.onlyAdminsCanSend, action: onToggleOnlyAdmins },
+              { title: "Editar configurações do grupo", subtitle: group.onlyAdminsCanEdit ? "Somente administradores" : "Todos os participantes", active: !!group.onlyAdminsCanEdit, action: onToggleOnlyAdminsCanEdit },
+            ].map((permission) => (
+              <button key={permission.title} onClick={permission.action} className="w-full flex items-center gap-4 px-4 py-4 text-left hover:bg-wa-hover">
+                <div className="flex-1">
+                  <p className="text-[15px] text-wa-text">{permission.title}</p>
+                  <p className="text-xs text-wa-secondary mt-1">{permission.subtitle}</p>
+                </div>
+                <div className={`w-10 h-6 rounded-full relative shrink-0 ${permission.active ? "bg-wa-green" : "bg-wa-input"}`}>
+                  <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all shadow" style={{ left: permission.active ? "18px" : "2px" }} />
+                </div>
+              </button>
+            ))}
+            <div className="px-4 pt-5 pb-2 border-t border-wa-border">
+              <p className="text-[15px] text-wa-text">Administradores do grupo</p>
+              <p className="text-xs text-wa-secondary mt-1">Os administradores aparecem identificados na lista de membros.</p>
+            </div>
+            {Array.from(new Set([...(group.adminNames || []), ...FAKE_MEMBERS.filter((m) => m.isAdmin).map((m) => m.name.replace(/^~\s*/, "")), ...(group.createdByMe ? [nickname] : [])])).map((name) => (
+              <div key={name} className="flex items-center gap-3 px-4 py-3">
+                <div className="w-10 h-10 rounded-full bg-wa-input flex items-center justify-center text-wa-secondary font-semibold">{name.charAt(0).toUpperCase()}</div>
+                <div className="flex-1 min-w-0"><p className="text-[15px] text-wa-text truncate">{name}</p></div>
+                <span className="text-[11px] text-wa-green bg-wa-green/10 px-2 py-0.5 rounded-md">Admin do grupo</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {tab === "midias" && (
           <div className="bg-wa-panel p-4">
             <div className="flex items-center justify-between mb-3">
@@ -275,40 +311,14 @@ export default function GroupInfoScreen({
             
 
             {canManage && (
-              <>
-                <div className="px-4 pt-4 pb-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-wa-secondary">Permissões do grupo</p>
-                  <p className="text-xs text-wa-muted mt-1">Só você, como criador ou administrador, pode alterar estas opções.</p>
+              <button onClick={() => setTab("permissoes")} className="w-full flex items-center gap-4 px-4 py-4 hover:bg-wa-hover text-left">
+                <Shield size={22} className="text-wa-secondary" />
+                <div className="flex-1">
+                  <p className="text-[15px] text-wa-text">Permissões do grupo</p>
+                  <p className="text-xs text-wa-secondary">Editar quem pode enviar mensagens e alterar informações</p>
                 </div>
-                {[
-                  { title: "Adicionar novos membros", subtitle: group.requireAdminApproval ? "Exige aprovação dos administradores" : "Os membros podem adicionar pessoas", active: !!group.requireAdminApproval, action: onToggleAdminApproval },
-                  { title: "Enviar novas mensagens", subtitle: group.onlyAdminsCanSend ? "Somente administradores" : "Todos os membros", active: group.onlyAdminsCanSend, action: onToggleOnlyAdmins },
-                  { title: "Editar configurações do grupo", subtitle: group.onlyAdminsCanEdit ? "Somente administradores podem alterar nome, foto e descrição" : "Todos os membros podem alterar informações", active: !!group.onlyAdminsCanEdit, action: onToggleOnlyAdminsCanEdit },
-                ].map((permission) => (
-                  <button key={permission.title} onClick={permission.action} className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
-                    <Shield size={22} className="text-wa-secondary" />
-                    <div className="flex-1">
-                      <p className="text-[15px] text-wa-text">{permission.title}</p>
-                      <p className="text-xs text-wa-secondary">{permission.subtitle}</p>
-                    </div>
-                    <div className={`w-10 h-6 rounded-full relative ${permission.active ? "bg-wa-green" : "bg-wa-input"}`}>
-                      <div className="w-5 h-5 bg-white rounded-full absolute top-0.5 transition-all shadow" style={{ left: permission.active ? "18px" : "2px" }} />
-                    </div>
-                  </button>
-                ))}
-                <button onClick={onPromoteAllMembers} className="w-full px-4 py-3.5 text-left hover:bg-wa-hover flex items-center gap-4">
-                  <Shield size={22} className="text-wa-green" />
-                  <div className="flex-1">
-                    <p className="text-[15px] text-wa-text">Promover todos os membros a administradores</p>
-                    <p className="text-xs text-wa-secondary">{group.allMembersAreAdmins ? "Todos os membros já são administradores" : "Todos os membros do grupo receberão permissões de administrador"}</p>
-                  </div>
-                </button>
-              </>
-            )}
-            {!canManage && (
-              <div className="mx-4 my-3 rounded-lg bg-wa-input/50 p-3">
-                <p className="text-sm text-wa-secondary">As permissões do grupo só podem ser visualizadas e alteradas por administradores.</p>
-              </div>
+                <ChevronRight size={20} className="text-wa-secondary" />
+              </button>
             )}
 
             
