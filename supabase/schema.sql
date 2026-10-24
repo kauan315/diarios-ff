@@ -98,5 +98,11 @@ create trigger dff_auth_user_created
 after insert on auth.users
 for each row execute procedure public.dff_create_profile();
 
--- Realtime para mensagens individuais (habilite também em Database > Replication se necessário).
-alter publication supabase_realtime add table public.direct_messages;
+-- Realtime para mensagens individuais; seguro executar o schema mais de uma vez.
+do $
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'direct_messages') then
+    alter publication supabase_realtime add table public.direct_messages;
+  end if;
+end $;
