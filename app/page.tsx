@@ -1052,7 +1052,13 @@ export default function Home() {
       {showSettings && (
         <ProfileScreen
           nickname={nickname}
-          onNicknameChange={(value) => { setNickname(value); saveToStorage("dff_nickname", value); }}
+          publicUserId={publicUserId}
+          onNicknameChange={(value) => {
+            setNickname(value); saveToStorage("dff_nickname", value);
+            if (supabase) supabase.auth.getUser().then(({ data }) => {
+              if (data.user) void supabase!.from("profiles").update({ nickname: value }).eq("id", data.user.id);
+            });
+          }}
           profilePhoto={profilePhoto}
           hideProfilePhoto={hideProfilePhoto}
           onProfilePhotoChange={setProfilePhoto}
