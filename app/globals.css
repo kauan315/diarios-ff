@@ -3,17 +3,17 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  --rk-bg: #090d0c;
-  --rk-panel: #111816;
-  --rk-header: #17211d;
-  --rk-input: #202b26;
-  --rk-border: #28372f;
-  --rk-text: #edf5ef;
-  --rk-secondary: #9aada1;
-  --rk-muted: #718379;
-  --rk-green: #39d98a;
-  --rk-green-dark: #20b873;
+  color-scheme: light;
+  --rk-bg: #efeae2;
+  --rk-panel: #ffffff;
+  --rk-header: #f0f2f5;
+  --rk-input: #f0f2f5;
+  --rk-border: #e9edef;
+  --rk-text: #111b21;
+  --rk-secondary: #667781;
+  --rk-muted: #8696a0;
+  --rk-green: #008069;
+  --rk-green-dark: #008069;
 }
 
 
@@ -45,10 +45,11 @@
   color-scheme: dark; --rk-bg: #100607; --rk-panel: #190b0d; --rk-header: #251114; --rk-input: #2b1518;
   --rk-border: #482328; --rk-text: #fff0f0; --rk-secondary: #d0a6a8; --rk-muted: #9d777a; --rk-green: #e04b55; --rk-green-dark: #b92d38;
 }
-:root[data-mode="light"] .chat-bg { background-color: #f7f8f9; }
+:root[data-mode="light"] .chat-bg { background-color: #efeae2; background-image: url("data:image/svg+xml,%3Csvg width=\"84\" height=\"84\" viewBox=\"0 0 84 84\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" stroke=\"%238d9b91\" stroke-opacity=\".13\" stroke-width=\"1.2\"%3E%3Ccircle cx=\"18\" cy=\"18\" r=\"7\"/%3E%3Cpath d=\"M53 9l8 8-8 8-8-8zM12 58q8-12 16 0t16 0M57 52h14v14H57zM25 36l5 5-5 5-5-5z\"/%3E%3C/g%3E%3C/svg%3E"); }
 :root[data-mode="dark"][data-theme="pink"] .chat-bg { background-color: #100910; }
 :root[data-mode="dark"][data-theme="blue"] .chat-bg { background-color: #080e18; }
 :root[data-mode="dark"][data-theme="red"] .chat-bg { background-color: #120809; }
+:root[data-mode="dark"] .chat-bg { background-color: #0d1511; }
 :root[data-mode="light"] input, :root[data-mode="light"] textarea { color-scheme: light; }
 
 
