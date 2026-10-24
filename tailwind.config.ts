@@ -9,13 +9,21 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        whatsapp: {
+        wa: {
+          bg: "#0b141a",
+          panel: "#111b21",
+          header: "#202c33",
+          hover: "#2a3942",
           green: "#00a884",
-          dark: "#111b21",
-          darker: "#0b141a",
-          light: "#202c33",
+          "green-dark": "#008069",
           bubble: "#005c4b",
           incoming: "#202c33",
+          text: "#e9edef",
+          secondary: "#8696a0",
+          muted: "#667781",
+          border: "#222d34",
+          input: "#2a3942",
+          danger: "#f15c6d",
         },
       },
     },
