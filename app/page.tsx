@@ -528,7 +528,7 @@ export default function Home() {
               )}
               {currentMessages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}>
-                  <div className={`rounded-lg px-2.5 py-1.5 max-w-[85%] md:max-w-[65%] shadow-sm ${msg.isMe ? "bg-wa-bubble rounded-tr-none" : "bg-wa-incoming rounded-tl-none"}`}>
+                  <div className={`dff-message-bubble ${msg.isMe ? "dff-message-out bg-wa-bubble rounded-tr-none" : "dff-message-in bg-wa-incoming rounded-tl-none"} rounded-lg px-2.5 py-1.5 max-w-[85%] md:max-w-[65%] shadow-sm`}>
                     {!msg.isMe && (
                       <p className="text-[13px] text-wa-green-dark font-medium mb-0.5">
                         {msg.sender}{msg.isAdmin && <span className="text-wa-muted font-normal"> · Admin</span>}
