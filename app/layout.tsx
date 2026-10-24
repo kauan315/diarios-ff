@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Diários FF",
-  description: "Chat e comunidades de Free Fire - grupos e diários",
+  title: "Zyron",
+  description: "Zyron — conversas e comunidades gamer.",
 };
 
 export default function RootLayout({
