@@ -38,6 +38,17 @@ function saveToStorage(key: string, value: unknown) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
 }
 
+function ZyronMark({ size = 48 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" aria-hidden="true" className="shrink-0">
+      <rect x="2" y="2" width="60" height="60" rx="16" fill="#101114" />
+      <path d="M14 15H49L29 34H49L50 49H14L34 30H14V15Z" fill="#F0444E" />
+      <path d="M14 15H49L42 22H28L14 35V15Z" fill="#FFFFFF" />
+      <path d="M50 49H14L22 42H36L50 28V49Z" fill="#B90F24" />
+    </svg>
+  );
+}
+
 export default function Home() {
   // Apply the saved theme on app startup, even before the settings screen is opened.
   useEffect(() => {
@@ -481,7 +492,7 @@ export default function Home() {
     const newId = Date.now();
     const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     const newGroup: Group = {
-      id: newId, name: newGroupName.trim(), description: newGroupDesc.trim() || (createKind === "comunidade" ? "Comunidade criada no Diários FF" : "Grupo criado no Diários FF"),
+      id: newId, name: newGroupName.trim(), description: newGroupDesc.trim() || (createKind === "comunidade" ? "Comunidade criada no Zyron" : "Grupo criado no Zyron"),
       members: 1 + selectedNewMembers.length, lastMessage: createKind === "comunidade" ? "Comunidade criada" : "Grupo criado", time, unread: 0, onlyAdminsCanSend: newGroupOnlyAdmins, isJoined: true, createdByMe: true, adminNames: [nickname], requireAdminApproval: false, onlyAdminsCanEdit: true,
       photo: newGroupPhoto, memberNames: [nickname, ...selectedNewMembers], isCommunity: createKind === "comunidade", isPublic: newGroupPrivacy === "publico",
     };
@@ -500,8 +511,8 @@ export default function Home() {
       <div className="min-h-screen bg-wa-bg flex items-center justify-center p-4">
         <div className="w-full max-w-sm">
           <div className="text-center mb-10">
-            <div className="w-24 h-24 bg-wa-green rounded-full flex items-center justify-center mx-auto mb-5"><MessageCircle size={44} className="text-white" /></div>
-            <h1 className="text-3xl font-light text-wa-text">Diários FF</h1>
+            <div className="flex justify-center mb-5"><ZyronMark size={88} /></div>
+            <h1 className="text-3xl font-semibold tracking-wide text-wa-text">Zyron</h1>
             <p className="text-wa-secondary mt-2 text-sm">Chat e comunidades de Free Fire</p>
           </div>
           <div className="bg-wa-panel rounded-xl p-6 space-y-4 shadow-sm">
@@ -533,14 +544,14 @@ export default function Home() {
         <div className="bg-wa-header px-4 py-3 flex items-center justify-between shrink-0">
           <div>
             <h1 className="text-lg font-medium text-wa-text">Comunidades FF</h1>
-            <p className="text-xs text-wa-secondary">Descubra e entre em diários</p>
+            <p className="text-xs text-wa-secondary">Descubra e entre em comunidades</p>
           </div>
         </div>
         <div className="px-3 py-2 bg-wa-panel shrink-0">
           <div className="flex items-center bg-wa-input rounded-lg px-3 py-2 gap-3">
             <Search size={18} className="text-wa-secondary" />
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar diários..." className="bg-transparent outline-none text-sm w-full text-wa-text placeholder-wa-muted" />
+              placeholder="Buscar comunidades..." className="bg-transparent outline-none text-sm w-full text-wa-text placeholder-wa-muted" />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto p-3 space-y-2.5 pb-24">
@@ -563,7 +574,7 @@ export default function Home() {
                     className="w-full bg-wa-header text-wa-text py-2 rounded-lg text-sm font-medium hover:bg-wa-hover">Abrir conversa</button>
                 ) : (
                   <button onClick={() => handleJoinGroup(group.id)}
-                    className="w-full bg-wa-green text-white py-2 rounded-lg text-sm font-medium hover:bg-wa-green-dark">Entrar no diário</button>
+                    className="w-full bg-wa-green text-white py-2 rounded-lg text-sm font-medium hover:bg-wa-green-dark">Entrar na comunidade</button>
                 )}
               </div>
             </div>
@@ -683,7 +694,7 @@ export default function Home() {
       <div className={`${showChat ? "hidden md:flex" : "flex"} w-full md:w-[400px] flex-col bg-wa-panel border-r border-wa-border`}>
         <div className="bg-wa-panel px-4 pt-3 pb-1 shrink-0">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-[22px] font-semibold text-wa-green">Diários FF</h1>
+            <div className="flex items-center gap-2"><ZyronMark size={34} /><h1 className="text-[22px] font-semibold tracking-wide text-wa-text">Zyron</h1></div>
             <div className="flex items-center gap-5 text-wa-secondary">
               <div className="relative">
                 <button
@@ -718,7 +729,7 @@ export default function Home() {
           <div className="flex items-center bg-wa-input rounded-full px-4 py-2.5 gap-3 mb-1">
             <Search size={18} className="text-wa-secondary" />
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pesquisar diários e conversas" className="bg-transparent outline-none text-[15px] w-full text-wa-text placeholder-wa-muted" />
+              placeholder="Pesquisar comunidades e conversas" className="bg-transparent outline-none text-[15px] w-full text-wa-text placeholder-wa-muted" />
           </div>
         </div>
 
@@ -750,7 +761,7 @@ export default function Home() {
             <div className="p-10 text-center text-wa-muted">
               <MessageCircle size={40} className="mx-auto mb-3 opacity-30" />
               <p className="text-sm">Nenhuma conversa ainda</p>
-              <p className="text-xs mt-1">Entre em um diário nas Comunidades</p>
+              <p className="text-xs mt-1">Entre em uma comunidade</p>
               <button onClick={() => { setScreen("comunidades"); setSearchQuery(""); }} className="mt-3 text-wa-green text-sm hover:underline">Ir para Comunidades FF</button>
             </div>
           ) : myChats.length > 0 && (
@@ -1011,8 +1022,8 @@ export default function Home() {
               <div className="w-20 h-20 rounded-full bg-wa-header flex items-center justify-center mx-auto mb-5">
                 <MessageCircle size={36} className="text-wa-muted" />
               </div>
-              <p className="text-xl font-light text-wa-text">Diários FF</p>
-              <p className="text-sm mt-2 text-wa-secondary max-w-xs">Selecione uma conversa ou vá em Comunidades para entrar em diários.</p>
+              <div className="flex items-center justify-center gap-2"><ZyronMark size={42} /><p className="text-xl font-semibold tracking-wide text-wa-text">Zyron</p></div>
+              <p className="text-sm mt-2 text-wa-secondary max-w-xs">Selecione uma conversa ou vá em Comunidades para entrar em comunidades.</p>
             </div>
           </div>
         )}
