@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 
 type Props = {
   nickname: string;
+  publicUserId?: string;
   onClose: () => void;
   onLogout: () => void;
   profilePhoto: string;
@@ -19,7 +20,7 @@ type Props = {
   contactNames?: string[];
 };
 
-export default function ProfileScreen({ nickname, onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onNicknameChange, onToggleHideProfilePhoto, contactNames = [] }: Props) {
+export default function ProfileScreen({ nickname, publicUserId = "", onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onNicknameChange, onToggleHideProfilePhoto, contactNames = [] }: Props) {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showThemes, setShowThemes] = useState(false);
@@ -129,6 +130,7 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
               {nickname}
               <ChevronDown size={18} className="text-wa-secondary" />
             </button>
+            {publicUserId && <button onClick={() => { navigator.clipboard?.writeText(publicUserId).then(() => alert("ID copiado!")).catch(() => alert("Seu ID: " + publicUserId)); }} className="mt-1 text-xs text-wa-secondary">Meu ID: {publicUserId} · tocar para copiar</button>}
           </div>
         </div>
 
