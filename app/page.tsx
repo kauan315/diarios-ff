@@ -4,12 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import {
   Search, MessageCircle, Users, Settings, Plus, ArrowLeft, MoreVertical,
   Send, Smile, Paperclip, Info, Shield, UserPlus, LogOut, X, Compass, Bot, Palette,
-  Camera, MessageCirclePlus, Pin, Mic, ImagePlus, Check, Lock, Globe, Heart,
+  MessageCirclePlus, Pin, Mic, ImagePlus, Check, Lock, Globe, Heart,
 } from "lucide-react";
 import ProfileScreen from "./ProfileScreen";
 import GroupInfoScreen from "./GroupInfoScreen";
 
-type Message = { id: number; sender: string; text: string; time: string; isMe: boolean; isAdmin?: boolean };
+type Message = { id: number; sender: string; text: string; time: string; isMe: boolean; isAdmin?: boolean; audioData?: string };
 type Group = {
   id: number; name: string; description: string; members: number;
   lastMessage: string; time: string; unread: number;
@@ -75,6 +75,9 @@ export default function Home() {
   const [newGroupPrivacy, setNewGroupPrivacy] = useState<"publico" | "privado">("publico");
   const [hydrated, setHydrated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
 
   useEffect(() => {
     const savedThemeColor = localStorage.getItem("dff_theme_color");
@@ -151,6 +154,62 @@ export default function Home() {
     setMessages((prev) => ({ ...prev, [selectedGroupId]: [...(prev[selectedGroupId] || []), newMessage] }));
     setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, lastMessage: inputText.trim(), time, unread: 0, isJoined: true } : g));
     setInputText("");
+  };
+
+  const handleAudioButton = async () => {
+    if (!selectedGroupId || !selectedGroup) return;
+    if (selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup)) {
+      alert("Somente administradores podem enviar mensagens neste grupo."); return;
+    }
+    if (isRecordingAudio) {
+      mediaRecorderRef.current?.stop();
+      setIsRecordingAudio(false);
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      alert("Este navegador não permite gravar áudio. Abra o site em um navegador atualizado e permita o acesso ao microfone.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+      recorder.onerror = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        setIsRecordingAudio(false);
+        alert("Não foi possível gravar o áudio. Tente novamente.");
+      };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        if (blob.size === 0) {
+          alert("O áudio ficou vazio. Tente gravar novamente.");
+          return;
+        }
+        if (blob.size > 1024 * 1024) {
+          alert("O áudio passou de 1 MB. Grave um áudio mais curto para conseguir enviar.");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result !== "string" || !selectedGroupId) return;
+          const time = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+          const audioMessage: Message = { id: Date.now(), sender: nickname, text: "Mensagem de áudio", time, isMe: true, audioData: reader.result };
+          setMessages((prev) => ({ ...prev, [selectedGroupId]: [...(prev[selectedGroupId] || []), audioMessage] }));
+          setGroups((prev) => prev.map((g) => g.id === selectedGroupId ? { ...g, lastMessage: "🎤 Mensagem de áudio", time, unread: 0, isJoined: true } : g));
+        };
+        reader.onerror = () => alert("Não foi possível preparar o áudio para envio.");
+        reader.readAsDataURL(blob);
+      };
+      recorder.start();
+      setIsRecordingAudio(true);
+    } catch {
+      alert("Permita o acesso ao microfone para gravar e enviar áudio.");
+    }
   };
 
   const handleJoinGroup = (groupId: number) => {
@@ -585,7 +644,14 @@ export default function Home() {
                         {msg.sender}{msg.isAdmin && <span className="text-wa-muted font-normal"> · Admin</span>}
                       </p>
                     )}
-                    <p className="text-[14.2px] text-wa-text leading-snug whitespace-pre-wrap break-words">{msg.text}</p>
+                    {msg.audioData ? (
+                      <div className="min-w-[220px] py-1">
+                        <audio controls preload="metadata" src={msg.audioData} className="w-full max-w-[280px]" />
+                        <p className="text-[12px] text-wa-secondary mt-1">Mensagem de áudio</p>
+                      </div>
+                    ) : (
+                      <p className="text-[14.2px] text-wa-text leading-snug whitespace-pre-wrap break-words">{msg.text}</p>
+                    )}
                     <p className={`text-[11px] text-right mt-0.5 ${msg.isMe ? "text-wa-secondary" : "text-wa-muted"}`}>{msg.time}</p>
                   </div>
                 </div>
@@ -606,16 +672,13 @@ export default function Home() {
                   className="flex-1 bg-transparent px-2 py-2 text-[15px] outline-none text-wa-text placeholder-wa-muted disabled:opacity-50"
                 />
                 <button className="text-wa-secondary p-1.5 shrink-0"><Paperclip size={22} /></button>
-                {!inputText.trim() && (
-                  <button className="text-wa-secondary p-1.5 shrink-0"><Camera size={22} /></button>
-                )}
-              </div>
+                              </div>
               {inputText.trim() && !(selectedGroup.onlyAdminsCanSend && !selectedGroup.createdByMe) ? (
                 <button onClick={handleSendMessage} className="bg-wa-green text-white p-2.5 rounded-full shrink-0 shadow-sm">
                   <Send size={20} />
                 </button>
               ) : (
-                <button className="bg-wa-green text-white p-2.5 rounded-full shrink-0 shadow-sm">
+                <button onClick={handleAudioButton} disabled={!!(selectedGroup.onlyAdminsCanSend && !isCurrentUserAdmin(selectedGroup))} aria-label={isRecordingAudio ? "Parar gravação e enviar áudio" : "Gravar e enviar áudio"} title={isRecordingAudio ? "Parar e enviar áudio" : "Gravar áudio"} className={`bg-wa-green text-white p-2.5 rounded-full shrink-0 shadow-sm ${isRecordingAudio ? "animate-pulse ring-2 ring-red-400" : ""} disabled:opacity-40`}>
                   <Mic size={20} />
                 </button>
               )}
