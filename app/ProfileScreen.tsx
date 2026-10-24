@@ -20,7 +20,8 @@ type Props = {
 export default function ProfileScreen({ nickname, onClose, onLogout, profilePhoto, hideProfilePhoto, onProfilePhotoChange, onToggleHideProfilePhoto }: Props) {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [showPrivacy, setShowPrivacy] = useState(false);
-  const [showSubscriptions, setShowSubscriptions] = useState(false);\n  const [selectedPlan, setSelectedPlan] = useState<"mensal" | "anual">("anual");
+  const [showSubscriptions, setShowSubscriptions] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<"mensal" | "anual">("anual");
   const items = [
     { icon: Diamond, title: "Assinaturas", desc: "Conheça os benefícios premium" },
     { icon: KeyRound, title: "Conta", desc: "Notificações de segurança, mudança de nickname" },
@@ -88,7 +89,8 @@ export default function ProfileScreen({ nickname, onClose, onLogout, profilePhot
             <button
               key={item.title}
               onClick={() => {
-                if (item.title === "Assinaturas") { setShowSubscriptions(true); return; }\n                if (item.title === "Privacidade") { setShowPrivacy(true); return; }
+                if (item.title === "Assinaturas") { setShowSubscriptions(true); return; }
+                if (item.title === "Privacidade") { setShowPrivacy(true); return; }
                 if (item.title === "Bots" || item.title === "Temas") {
                   alert(`${item.title} — em breve você me fala como funciona`);
                 }
