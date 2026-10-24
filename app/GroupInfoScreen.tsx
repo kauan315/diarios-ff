@@ -14,6 +14,7 @@ type Group = {
   members: number;
   onlyAdminsCanSend: boolean;
   createdByMe?: boolean;
+  photo?: string;
 };
 
 type Props = {
