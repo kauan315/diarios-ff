@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  ArrowLeft, MoreVertical, Search, Mic, Shield, Bell, Image as ImageIcon,
+  ArrowLeft, MoreVertical, Search, Shield, Bell, Image as ImageIcon,
   Lock, MessageSquareLock, Heart, Contact, Upload, Trash2, LogOut, Flag,
   Eye, ChevronRight,
 } from "lucide-react";
@@ -83,20 +83,6 @@ export default function GroupInfoScreen({
             )}
           </div>
 
-          <div className="flex gap-8 mt-5">
-            <button className="flex flex-col items-center gap-1.5">
-              <div className="w-12 h-12 rounded-full bg-wa-input flex items-center justify-center text-wa-secondary">
-                <Mic size={22} />
-              </div>
-              <span className="text-[11px] text-wa-secondary">Conversa por voz</span>
-            </button>
-            <button className="flex flex-col items-center gap-1.5">
-              <div className="w-12 h-12 rounded-full bg-wa-input flex items-center justify-center text-wa-secondary">
-                <Search size={22} />
-              </div>
-              <span className="text-[11px] text-wa-secondary">Pesquisar</span>
-            </button>
-          </div>
         </div>
 
         <div className="bg-wa-panel mt-2 flex border-b border-wa-border sticky top-0 z-10">
