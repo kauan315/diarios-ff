@@ -45,9 +45,35 @@ export default function GroupInfoScreen({
 }: Props) {
   const [tab, setTab] = useState<"membros" | "midias" | "config">("membros");
   const [descExpanded, setDescExpanded] = useState(false);
+  const [mediaVisibilityOpen, setMediaVisibilityOpen] = useState(false);
+  const [mediaVisibility, setMediaVisibility] = useState<"Sim" | "Não" | "Padrão">("Padrão");
 
   return (
     <div className="absolute inset-0 bg-wa-bg z-20 flex flex-col">
+      {mediaVisibilityOpen && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 p-5">
+          <div className="w-full max-w-sm rounded-2xl bg-wa-panel p-5 shadow-xl">
+            <h3 className="text-lg font-medium text-wa-text mb-3">Visibilidade de mídia</h3>
+            <p className="text-sm text-wa-text mb-4">Você deseja que fotos e vídeos sejam salvos na galeria do seu dispositivo?</p>
+            <div className="space-y-1">
+              {(["Sim", "Não", "Padrão"] as const).map((option) => (
+                <button
+                  key={option}
+                  onClick={() => { setMediaVisibility(option); setMediaVisibilityOpen(false); }}
+                  className="w-full flex items-center gap-3 rounded-lg px-2 py-3 text-left hover:bg-wa-hover"
+                >
+                  <span className={`flex h-5 w-5 items-center justify-center rounded-full border ${mediaVisibility === option ? "border-wa-green" : "border-wa-secondary"}`}>
+                    {mediaVisibility === option && <span className="h-2.5 w-2.5 rounded-full bg-wa-green" />}
+                  </span>
+                  <span className="text-[15px] text-wa-text">{option}</span>
+                  {option === "Padrão" && <span className="ml-auto text-xs text-wa-secondary">Padrão</span>}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setMediaVisibilityOpen(false)} className="mt-3 w-full rounded-lg py-2 text-sm font-medium text-wa-green">Cancelar</button>
+          </div>
+        </div>
+      )}
       <div className="bg-wa-panel px-3 py-2.5 flex items-center justify-between shrink-0">
         <button onClick={onClose} className="text-wa-secondary p-1">
           <ArrowLeft size={24} />
@@ -186,9 +212,15 @@ export default function GroupInfoScreen({
         {tab === "config" && (
           <div className="bg-wa-panel">
             
-            <button className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left">
+            <button
+              onClick={() => setMediaVisibilityOpen(true)}
+              className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-wa-hover text-left"
+            >
               <ImageIcon size={22} className="text-wa-secondary" />
-              <p className="text-[15px] text-wa-text">Visibilidade de mídia</p>
+              <div>
+                <p className="text-[15px] text-wa-text">Visibilidade de mídia</p>
+                <p className="text-xs text-wa-secondary">Padrão</p>
+              </div>
             </button>
             
 
