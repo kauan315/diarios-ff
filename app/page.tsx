@@ -151,12 +151,13 @@ export default function Home() {
     if (savedNick && !isSupabaseConfigured) { setNickname(savedNick); setIsLoggedIn(true); }
     setProfilePhoto(savedProfilePhoto); setHideProfilePhoto(savedHideProfilePhoto);
     setGroups(savedGroups); setMessages(savedMessages); setHydrated(true);
-    if (isSupabaseConfigured && supabase) {
+    const client = supabase;
+    if (isSupabaseConfigured && client) {
       let activeUserId = "";
       let profileRequest = 0;
 
       const applySession = async (session: import("@supabase/supabase-js").Session | null) => {
-        if (!supabase) return;
+        if (!client) return;
         const requestId = ++profileRequest;
         activeUserId = session?.user.id || "";
         if (!session) {
@@ -192,7 +193,7 @@ export default function Home() {
         setDirectMessageInput("");
         setDirectChatError("");
 
-        const { data: profile, error } = await supabase
+        const { data: profile, error } = await client
           .from("profiles")
           .select("nickname, public_id, avatar_url")
           .eq("id", session.user.id)
@@ -210,12 +211,12 @@ export default function Home() {
         setProfilePhoto(profile?.avatar_url || "");
       };
 
-      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data: authListener } = client.auth.onAuthStateChange((_event, session) => {
         // Adie a consulta para não executar outra operação Supabase dentro do callback.
         queueMicrotask(() => { void applySession(session); });
       });
 
-      void supabase.auth.getSession().then(({ data, error }) => {
+      void client.auth.getSession().then(({ data, error }) => {
         if (error) {
           console.error("Não foi possível recuperar a sessão.", error);
           void applySession(null);
