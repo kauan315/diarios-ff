@@ -329,24 +329,26 @@ export default function Home() {
       if (active && !error && data) setDirectMessages(data as typeof directMessages);
       if (active && error) setDirectChatError("Não foi possível atualizar as mensagens. Verifique as políticas do Supabase.");
     };
+    // Load immediately and keep polling as a fallback: Supabase Realtime may
+    // not be enabled for direct_messages in the project's publication.
+    void refreshMessages();
+    const refreshInterval = window.setInterval(() => { void refreshMessages(); }, 2500);
     const channel = client
       .channel("direct-messages-" + directConversationId)
       .on("postgres_changes", {
-        event: "INSERT",
+        event: "*",
         schema: "public",
         table: "direct_messages",
         filter: "conversation_id=eq." + directConversationId,
-      }, (payload) => {
-        const incoming = payload.new as { id: string; sender_id: string; content: string; created_at: string };
-        setDirectMessages((previous) => previous.some((message) => message.id === incoming.id)
-          ? previous
-          : [...previous, incoming]);
+      }, () => {
+        void refreshMessages();
       })
       .subscribe((status) => {
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") void refreshMessages();
       });
     return () => {
       active = false;
+      window.clearInterval(refreshInterval);
       void client.removeChannel(channel);
     };
   }, [directConversationId]);
