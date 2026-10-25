@@ -121,6 +121,7 @@ export default function Home() {
   const [newGroupOnlyAdmins, setNewGroupOnlyAdmins] = useState(false);
   const [newGroupPrivacy, setNewGroupPrivacy] = useState<"publico" | "privado">("publico");
   const [hydrated, setHydrated] = useState(false);
+  const [storageScope, setStorageScope] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -138,9 +139,9 @@ export default function Home() {
     const savedHideProfilePhoto = isSupabaseConfigured ? false : loadFromStorage<boolean>("dff_hide_profile_photo", false);
     // Remove os grupos e mensagens fictícios que vinham instalados como demonstração,
     // preservando os grupos e conversas criados pelo próprio usuário.
-    const storedGroups = loadFromStorage<Group[]>("dff_groups", DEFAULT_GROUPS);
+    const storedGroups = isSupabaseConfigured ? DEFAULT_GROUPS : loadFromStorage<Group[]>("dff_groups", DEFAULT_GROUPS);
     const savedGroups = storedGroups.filter((group) => !SAMPLE_GROUP_NAMES.has(group.name));
-    const storedMessages = loadFromStorage<Record<number, Message[]>>("dff_messages", DEFAULT_MESSAGES);
+    const storedMessages = isSupabaseConfigured ? DEFAULT_MESSAGES : loadFromStorage<Record<number, Message[]>>("dff_messages", DEFAULT_MESSAGES);
     const sampleGroupIds = new Set(storedGroups.filter((group) => SAMPLE_GROUP_NAMES.has(group.name)).map((group) => group.id));
     const savedMessages = Object.fromEntries(
       Object.entries(storedMessages).filter(([groupId]) => !sampleGroupIds.has(Number(groupId)))
@@ -159,6 +160,11 @@ export default function Home() {
         activeUserId = session?.user.id || "";
         if (!session) {
           setIsLoggedIn(false);
+          setStorageScope("");
+          setGroups(DEFAULT_GROUPS);
+          setMessages(DEFAULT_MESSAGES);
+          setProfilePhoto("");
+          setHideProfilePhoto(false);
           setNickname("");
           setPublicUserId("");
           setDirectChatUser(null);
@@ -172,6 +178,11 @@ export default function Home() {
 
         // Limpe imediatamente os dados visuais da conta anterior.
         setIsLoggedIn(true);
+        setStorageScope(session.user.id);
+        const scopedGroups = loadFromStorage<Group[]>(`dff_groups_${session.user.id}`, DEFAULT_GROUPS);
+        const scopedMessages = loadFromStorage<Record<number, Message[]>>(`dff_messages_${session.user.id}`, DEFAULT_MESSAGES);
+        setGroups(scopedGroups.filter((group) => !SAMPLE_GROUP_NAMES.has(group.name)));
+        setMessages(scopedMessages);
         setNickname("");
         setPublicUserId("");
         setDirectChatUser(null);
@@ -221,15 +232,22 @@ export default function Home() {
 
   useEffect(() => {
     if (!hydrated) return;
-    if (!isSupabaseConfigured) saveToStorage("dff_nickname", nickname);
-    else localStorage.removeItem("dff_nickname");
     if (!isSupabaseConfigured) {
+      saveToStorage("dff_nickname", nickname);
       saveToStorage("dff_profile_photo", profilePhoto);
       saveToStorage("dff_hide_profile_photo", hideProfilePhoto);
+      saveToStorage("dff_groups", groups);
+      saveToStorage("dff_messages", messages);
+    } else {
+      localStorage.removeItem("dff_nickname");
+      // Each authenticated account has its own local data namespace.
+      // Never read/write the legacy shared keys for Supabase accounts.
+      if (storageScope) {
+        saveToStorage(`dff_groups_${storageScope}`, groups);
+        saveToStorage(`dff_messages_${storageScope}`, messages);
+      }
     }
-    saveToStorage("dff_groups", groups);
-    saveToStorage("dff_messages", messages);
-  }, [nickname, profilePhoto, hideProfilePhoto, groups, messages, hydrated]);
+  }, [nickname, profilePhoto, hideProfilePhoto, groups, messages, hydrated, storageScope]);
 
   const selectedGroup = groups.find((g) => g.id === selectedGroupId) || null;
   const currentMessages = selectedGroupId ? messages[selectedGroupId] || [] : [];
