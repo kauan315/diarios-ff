@@ -36,16 +36,7 @@ type Props = {
   onToggleFavorite: () => void;
 };
 
-const FAKE_MEMBERS = [
-  { name: "~ Adm", phone: "+55 75 8243-8509", isAdmin: true },
-  { name: "~ adm amora", phone: "+55 75 8865-6784", isAdmin: true },
-  { name: "~ Adm July", phone: "+55 75 8864-1215", isAdmin: true },
-  { name: "~ Adm Kauany", phone: "+55 16 98123-3384", isAdmin: true },
-  { name: "kauan lima", phone: "+55 75 8255-9544", isAdmin: true },
-  { name: "Jogador123", phone: "", isAdmin: false },
-  { name: "FF_Master", phone: "", isAdmin: false },
-  { name: "ProPlayer", phone: "", isAdmin: false },
-];
+const FAKE_MEMBERS: { name: string; phone: string; isAdmin: boolean }[] = [];
 
 export default function GroupInfoScreen({
   group,
@@ -94,7 +85,7 @@ export default function GroupInfoScreen({
             {reportSent ? (
               <>
                 <h3 className="text-lg font-medium text-wa-text mb-2">Denúncia registrada</h3>
-                <p className="text-sm text-wa-secondary">Sua denúncia deste grupo foi registrada nesta demonstração.</p>
+                <p className="text-sm text-wa-secondary">O envio de denúncias ainda não está conectado ao servidor. Nenhuma denúncia foi enviada.</p>
                 <button onClick={() => setReportOpen(false)} className="mt-5 w-full rounded-lg bg-wa-green py-2.5 text-sm font-medium text-white">Concluir</button>
               </>
             ) : (
@@ -111,7 +102,7 @@ export default function GroupInfoScreen({
                 </div>
                 <div className="flex gap-3 mt-4">
                   <button onClick={() => setReportOpen(false)} className="flex-1 rounded-lg py-2.5 text-sm text-wa-secondary hover:bg-wa-hover">Cancelar</button>
-                  <button onClick={() => setReportSent(true)} className="flex-1 rounded-lg bg-wa-danger py-2.5 text-sm font-medium text-white">Enviar denúncia</button>
+                  <button onClick={() => setReportOpen(false)} className="flex-1 rounded-lg bg-wa-danger py-2.5 text-sm font-medium text-white">Fechar</button>
                 </div>
               </>
             )}
