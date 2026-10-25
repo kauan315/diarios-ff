@@ -134,8 +134,8 @@ export default function Home() {
     document.documentElement.dataset.mode = savedThemeMode === "light" ? "light" : "dark";
     document.documentElement.dataset.preset = savedThemePreset || "classic-green";
     const savedNick = loadFromStorage<string>("dff_nickname", "");
-    const savedProfilePhoto = loadFromStorage<string>("dff_profile_photo", "");
-    const savedHideProfilePhoto = loadFromStorage<boolean>("dff_hide_profile_photo", false);
+    const savedProfilePhoto = isSupabaseConfigured ? "" : loadFromStorage<string>("dff_profile_photo", "");
+    const savedHideProfilePhoto = isSupabaseConfigured ? false : loadFromStorage<boolean>("dff_hide_profile_photo", false);
     // Remove os grupos e mensagens fictícios que vinham instalados como demonstração,
     // preservando os grupos e conversas criados pelo próprio usuário.
     const storedGroups = loadFromStorage<Group[]>("dff_groups", DEFAULT_GROUPS);
@@ -182,7 +182,7 @@ export default function Home() {
 
         const { data: profile, error } = await supabase
           .from("profiles")
-          .select("nickname, public_id")
+          .select("nickname, public_id, avatar_url")
           .eq("id", session.user.id)
           .maybeSingle();
 
@@ -195,6 +195,7 @@ export default function Home() {
         }
         setNickname(profile?.nickname || session.user.email?.split("@")[0] || "Jogador");
         setPublicUserId(String(profile?.public_id ?? ""));
+        setProfilePhoto(profile?.avatar_url || "");
       };
 
       const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -222,8 +223,10 @@ export default function Home() {
     if (!hydrated) return;
     if (!isSupabaseConfigured) saveToStorage("dff_nickname", nickname);
     else localStorage.removeItem("dff_nickname");
-    saveToStorage("dff_profile_photo", profilePhoto);
-    saveToStorage("dff_hide_profile_photo", hideProfilePhoto);
+    if (!isSupabaseConfigured) {
+      saveToStorage("dff_profile_photo", profilePhoto);
+      saveToStorage("dff_hide_profile_photo", hideProfilePhoto);
+    }
     saveToStorage("dff_groups", groups);
     saveToStorage("dff_messages", messages);
   }, [nickname, profilePhoto, hideProfilePhoto, groups, messages, hydrated]);
@@ -1171,7 +1174,12 @@ export default function Home() {
           }}
           profilePhoto={profilePhoto}
           hideProfilePhoto={hideProfilePhoto}
-          onProfilePhotoChange={setProfilePhoto}
+          onProfilePhotoChange={(photo) => {
+            setProfilePhoto(photo);
+            if (supabase) void supabase.auth.getUser().then(({ data }) => {
+              if (data.user) void supabase!.from("profiles").update({ avatar_url: photo || null }).eq("id", data.user.id);
+            });
+          }}
           onToggleHideProfilePhoto={() => setHideProfilePhoto((value) => !value)}
           contactNames={availableMembers}
           onClose={() => setShowSettings(false)}
