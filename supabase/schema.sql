@@ -32,7 +32,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 
 drop trigger if exists profiles_generate_public_id on public.profiles;
 create trigger profiles_generate_public_id
