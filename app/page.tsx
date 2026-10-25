@@ -314,13 +314,47 @@ export default function Home() {
     else setDirectMessages((history || []) as typeof directMessages);
   };
 
+  useEffect(() => {
+    if (!supabase || !directConversationId) return;
+    let active = true;
+    const refreshMessages = async () => {
+      const { data, error } = await supabase
+        .from("direct_messages")
+        .select("id, sender_id, content, created_at")
+        .eq("conversation_id", directConversationId)
+        .order("created_at", { ascending: true });
+      if (active && !error && data) setDirectMessages(data as typeof directMessages);
+      if (active && error) setDirectChatError("Não foi possível atualizar as mensagens. Verifique as políticas do Supabase.");
+    };
+    const channel = supabase
+      .channel("direct-messages-" + directConversationId)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "direct_messages",
+        filter: "conversation_id=eq." + directConversationId,
+      }, (payload) => {
+        const incoming = payload.new as { id: string; sender_id: string; content: string; created_at: string };
+        setDirectMessages((previous) => previous.some((message) => message.id === incoming.id)
+          ? previous
+          : [...previous, incoming]);
+      })
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") void refreshMessages();
+      });
+    return () => {
+      active = false;
+      void supabase.removeChannel(channel);
+    };
+  }, [directConversationId]);
+
   const sendDirectMessage = async () => {
     const content = directMessageInput.trim();
     if (!content || !directConversationId || !supabase) return;
     const { data: authData } = await supabase.auth.getUser();
     if (!authData.user) return;
     const { data, error } = await supabase.from("direct_messages").insert({ conversation_id: directConversationId, sender_id: authData.user.id, content }).select("id, sender_id, content, created_at").single();
-    if (error) { setDirectChatError("Não foi possível enviar a mensagem."); return; }
+    if (error) { console.error("Falha ao enviar mensagem privada:", error); setDirectChatError("A mensagem não foi enviada. Verifique se o SQL e as permissões do Supabase estão configurados."); return; }
     setDirectMessages((previous) => [...previous, data as typeof directMessages[number]]);
     setDirectMessageInput("");
   };
