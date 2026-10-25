@@ -215,6 +215,7 @@ export default function Home() {
     if (!currentId) { setDirectChatError("Entre na sua conta para conversar."); return; }
     if (profile.id === currentId) { setDirectChatError("Esse é o seu próprio perfil."); return; }
     setDirectChatError("");
+    setShowUserSearch(false);
     setDirectChatUser(profile);
     const [user_a, user_b] = [currentId, profile.id].sort();
     const { data: existing, error: findError } = await supabase.from("direct_conversations").select("id").eq("user_a", user_a).eq("user_b", user_b).maybeSingle();
