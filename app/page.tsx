@@ -156,6 +156,7 @@ export default function Home() {
       let profileRequest = 0;
 
       const applySession = async (session: import("@supabase/supabase-js").Session | null) => {
+        if (!supabase) return;
         const requestId = ++profileRequest;
         activeUserId = session?.user.id || "";
         if (!session) {
