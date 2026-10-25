@@ -290,7 +290,7 @@ export default function Home() {
 
   const openDirectChat = async (profile: { id: string; public_id: number; nickname: string; avatar_url: string | null }) => {
     if (!supabase) { setDirectChatError("Configure o Supabase para iniciar conversas entre contas."); return; }
-    const { data: authData } = await supabase.auth.getUser();
+    const { data: authData } = await supabase!.auth.getUser();
     const currentId = authData.user?.id;
     if (!currentId) { setDirectChatError("Entre na sua conta para conversar."); return; }
     if (profile.id === currentId) { setDirectChatError("Esse é o seu próprio perfil."); return; }
@@ -354,7 +354,7 @@ export default function Home() {
   const sendDirectMessage = async () => {
     const content = directMessageInput.trim();
     if (!content || !directConversationId || !supabase) return;
-    const { data: authData } = await supabase.auth.getUser();
+    const { data: authData } = await supabase!.auth.getUser();
     if (!authData.user) return;
     const { data, error } = await supabase.from("direct_messages").insert({ conversation_id: directConversationId, sender_id: authData.user.id, content }).select("id, sender_id, content, created_at").single();
     if (error) { console.error("Falha ao enviar mensagem privada:", error); setDirectChatError("A mensagem não foi enviada. Verifique se o SQL e as permissões do Supabase estão configurados."); return; }
@@ -371,13 +371,13 @@ export default function Home() {
       try {
         if (authMode === "signup") {
           const nick = tempNickname.trim() || authEmail.split("@")[0];
-          const { data, error } = await supabase.auth.signUp({ email: authEmail.trim(), password: authPassword, options: { data: { nickname: nick } } });
+          const { data, error } = await supabase!.auth.signUp({ email: authEmail.trim(), password: authPassword, options: { data: { nickname: nick } } });
           if (error) throw error;
           if (!data.session) { setAuthNotice("Conta criada! Confira seu e-mail para confirmar o cadastro e depois entre."); return; }
           const { data: profile } = await supabase.from("profiles").select("nickname, public_id").eq("id", data.user!.id).maybeSingle();
           setNickname(profile?.nickname || nick); setPublicUserId(String(profile?.public_id ?? "")); setIsLoggedIn(true);
         } else {
-          const { data, error } = await supabase.auth.signInWithPassword({ email: authEmail.trim(), password: authPassword });
+          const { data, error } = await supabase!.auth.signInWithPassword({ email: authEmail.trim(), password: authPassword });
           if (error) throw error;
           const { data: profile } = await supabase.from("profiles").select("nickname, public_id").eq("id", data.user.id).maybeSingle();
           setNickname(profile?.nickname || data.user.email?.split("@")[0] || "Jogador"); setPublicUserId(String(profile?.public_id ?? "")); setIsLoggedIn(true);
@@ -393,7 +393,7 @@ export default function Home() {
 
   const handleLogout = async () => {
     if (!confirm("Sair da conta? Seus grupos e mensagens ficam salvos neste aparelho.")) return;
-    if (isSupabaseConfigured && supabase) await supabase.auth.signOut();
+    if (isSupabaseConfigured && supabase) await supabase!.auth.signOut();
     setIsLoggedIn(false); setNickname(""); setPublicUserId(""); setSelectedGroupId(null); setShowSettings(false);
     localStorage.removeItem("dff_nickname");
   };
@@ -1223,7 +1223,7 @@ export default function Home() {
           publicUserId={publicUserId}
           onNicknameChange={(value) => {
             setNickname(value); saveToStorage("dff_nickname", value);
-            if (supabase) supabase.auth.getUser().then(({ data }) => {
+            if (supabase) supabase!.auth.getUser().then(({ data }) => {
               if (data.user) void supabase!.from("profiles").update({ nickname: value }).eq("id", data.user.id);
             });
           }}
@@ -1231,7 +1231,7 @@ export default function Home() {
           hideProfilePhoto={hideProfilePhoto}
           onProfilePhotoChange={(photo) => {
             setProfilePhoto(photo);
-            if (supabase) void supabase.auth.getUser().then(({ data }) => {
+            if (supabase) void supabase!.auth.getUser().then(({ data }) => {
               if (data.user) void supabase!.from("profiles").update({ avatar_url: photo || null }).eq("id", data.user.id);
             });
           }}
