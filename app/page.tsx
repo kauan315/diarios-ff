@@ -145,26 +145,83 @@ export default function Home() {
     const savedMessages = Object.fromEntries(
       Object.entries(storedMessages).filter(([groupId]) => !sampleGroupIds.has(Number(groupId)))
     ) as Record<number, Message[]>;
-    if (savedNick) { setNickname(savedNick); if (!isSupabaseConfigured) setIsLoggedIn(true); }
+    // Em contas Supabase, nunca reutilize o apelido salvo localmente:
+    // ele pode pertencer à última conta usada neste aparelho.
+    if (savedNick && !isSupabaseConfigured) { setNickname(savedNick); setIsLoggedIn(true); }
     setProfilePhoto(savedProfilePhoto); setHideProfilePhoto(savedHideProfilePhoto);
     setGroups(savedGroups); setMessages(savedMessages); setHydrated(true);
     if (isSupabaseConfigured && supabase) {
-      supabase.auth.getSession().then(async ({ data }) => {
-        if (!data.session) return;
+      let activeUserId = "";
+      let profileRequest = 0;
+
+      const applySession = async (session: import("@supabase/supabase-js").Session | null) => {
+        const requestId = ++profileRequest;
+        activeUserId = session?.user.id || "";
+        if (!session) {
+          setIsLoggedIn(false);
+          setNickname("");
+          setPublicUserId("");
+          setDirectChatUser(null);
+          setDirectConversationId(null);
+          setDirectMessages([]);
+          setDirectMessageInput("");
+          setDirectChatError("");
+          localStorage.removeItem("dff_nickname");
+          return;
+        }
+
+        // Limpe imediatamente os dados visuais da conta anterior.
         setIsLoggedIn(true);
-        const { data: profile } = await supabase!.from("profiles").select("nickname, public_id").eq("id", data.session.user.id).maybeSingle();
-        if (profile) { setNickname(profile.nickname || data.session.user.email?.split("@")[0] || "Jogador"); setPublicUserId(String(profile.public_id ?? "")); }
-      });
+        setNickname("");
+        setPublicUserId("");
+        setDirectChatUser(null);
+        setDirectConversationId(null);
+        setDirectMessages([]);
+        setDirectMessageInput("");
+        setDirectChatError("");
+
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("nickname, public_id")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        // Ignore respostas antigas se outra conta entrou enquanto carregávamos.
+        if (requestId !== profileRequest || activeUserId !== session.user.id) return;
+        if (error) {
+          console.error("Não foi possível carregar o perfil do usuário.", error);
+          setNickname(session.user.email?.split("@")[0] || "Jogador");
+          return;
+        }
+        setNickname(profile?.nickname || session.user.email?.split("@")[0] || "Jogador");
+        setPublicUserId(String(profile?.public_id ?? ""));
+      };
+
       const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-        if (!session) { setIsLoggedIn(false); setPublicUserId(""); }
+        // Adie a consulta para não executar outra operação Supabase dentro do callback.
+        queueMicrotask(() => { void applySession(session); });
       });
-      return () => authListener.subscription.unsubscribe();
+
+      void supabase.auth.getSession().then(({ data, error }) => {
+        if (error) {
+          console.error("Não foi possível recuperar a sessão.", error);
+          void applySession(null);
+          return;
+        }
+        void applySession(data.session);
+      });
+
+      return () => {
+        profileRequest++;
+        authListener.subscription.unsubscribe();
+      };
     }
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    saveToStorage("dff_nickname", nickname);
+    if (!isSupabaseConfigured) saveToStorage("dff_nickname", nickname);
+    else localStorage.removeItem("dff_nickname");
     saveToStorage("dff_profile_photo", profilePhoto);
     saveToStorage("dff_hide_profile_photo", hideProfilePhoto);
     saveToStorage("dff_groups", groups);
