@@ -1,15 +1,43 @@
 -- Diários FF: autenticação por e-mail, ID público numérico e conversas individuais.
 -- Execute este arquivo no SQL Editor do projeto Supabase.
 
-create sequence if not exists public.dff_user_id_seq start with 1000000000;
-
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  public_id bigint not null unique default nextval('public.dff_user_id_seq'),
+  public_id bigint not null unique,
   nickname text not null default 'Jogador',
   avatar_url text,
   created_at timestamptz not null default now()
 );
+
+-- Generate collision-checked 9-digit public IDs for new profiles and
+-- normalize old sequence-generated 10-digit IDs when they are updated.
+create or replace function public.generate_profile_public_id()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $
+declare
+  candidate bigint;
+begin
+  if new.public_id is null or new.public_id < 100000000 or new.public_id > 999999999 then
+    loop
+      candidate := floor(100000000 + random() * 900000000)::bigint;
+      exit when not exists (
+        select 1 from public.profiles p
+        where p.public_id = candidate and p.id is distinct from new.id
+      );
+    end loop;
+    new.public_id := candidate;
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists profiles_generate_public_id on public.profiles;
+create trigger profiles_generate_public_id
+before insert or update of public_id on public.profiles
+for each row execute function public.generate_profile_public_id();
 
 create table if not exists public.direct_conversations (
   id uuid primary key default gen_random_uuid(),
