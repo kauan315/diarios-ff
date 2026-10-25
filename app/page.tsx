@@ -316,10 +316,11 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (!supabase || !directConversationId) return;
+    const client = supabase;
+    if (!client || !directConversationId) return;
     let active = true;
     const refreshMessages = async () => {
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("direct_messages")
         .select("id, sender_id, content, created_at")
         .eq("conversation_id", directConversationId)
@@ -327,7 +328,7 @@ export default function Home() {
       if (active && !error && data) setDirectMessages(data as typeof directMessages);
       if (active && error) setDirectChatError("Não foi possível atualizar as mensagens. Verifique as políticas do Supabase.");
     };
-    const channel = supabase
+    const channel = client
       .channel("direct-messages-" + directConversationId)
       .on("postgres_changes", {
         event: "INSERT",
@@ -345,7 +346,7 @@ export default function Home() {
       });
     return () => {
       active = false;
-      void supabase.removeChannel(channel);
+      void client.removeChannel(channel);
     };
   }, [directConversationId]);
 
