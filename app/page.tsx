@@ -19,6 +19,16 @@ type Group = {
   photo?: string; memberNames?: string[]; isCommunity?: boolean; isPublic?: boolean; isFavorite?: boolean;
 };
 
+type DirectConversation = {
+  id: string;
+  user_a: string;
+  user_b: string;
+  created_at: string;
+  last_message: string | null;
+  last_message_at: string | null;
+  contact: { id: string; public_id: number; nickname: string; avatar_url: string | null };
+};
+
 const DEFAULT_GROUPS: Group[] = [];
 const DEFAULT_MESSAGES: Record<number, Message[]> = {};
 const SAMPLE_GROUP_NAMES = new Set([
@@ -36,6 +46,73 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 function saveToStorage(key: string, value: unknown) {
   if (typeof window === "undefined") return;
   try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+async function loadDirectConversations(
+  client: NonNullable<typeof supabase>,
+  userId: string,
+): Promise<DirectConversation[]> {
+  const { data: conversations, error } = await client
+    .from("direct_conversations")
+    .select("id, user_a, user_b, created_at")
+    .or("user_a.eq." + userId + ",user_b.eq." + userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  if (!conversations?.length) return [];
+
+  const contactIds = Array.from(new Set(conversations.map((conversation) =>
+    conversation.user_a === userId ? conversation.user_b : conversation.user_a
+  )));
+  const { data: profiles, error: profileError } = await client
+    .from("profiles")
+    .select("id, public_id, nickname, avatar_url")
+    .in("id", contactIds);
+
+  if (profileError) throw profileError;
+  const profilesById = new Map<string, DirectConversation["contact"]>();
+  for (const profile of profiles || []) {
+    profilesById.set(profile.id, {
+      id: profile.id,
+      public_id: Number(profile.public_id),
+      nickname: profile.nickname || "Jogador",
+      avatar_url: profile.avatar_url || null,
+    });
+  }
+
+  const { data: recentMessages, error: messagesError } = await client
+    .from("direct_messages")
+    .select("conversation_id, sender_id, content, created_at")
+    .in("conversation_id", conversations.map((conversation) => conversation.id))
+    .order("created_at", { ascending: false })
+    .limit(Math.max(50, Math.min(500, conversations.length * 10)));
+
+  if (messagesError) throw messagesError;
+  const latestByConversation = new Map<string, { content: string; created_at: string }>();
+  for (const message of recentMessages || []) {
+    if (!latestByConversation.has(message.conversation_id)) {
+      latestByConversation.set(message.conversation_id, {
+        content: message.content,
+        created_at: message.created_at,
+      });
+    }
+  }
+
+  return conversations.flatMap((conversation) => {
+    const contactId = conversation.user_a === userId ? conversation.user_b : conversation.user_a;
+    const contact = profilesById.get(contactId);
+    if (!contact) return [];
+    const lastMessage = latestByConversation.get(conversation.id);
+    return [{
+      ...conversation,
+      contact,
+      last_message: lastMessage?.content ?? null,
+      last_message_at: lastMessage?.created_at ?? null,
+    }];
+  }).sort((a, b) =>
+    new Date(b.last_message_at || b.created_at).getTime() -
+    new Date(a.last_message_at || a.created_at).getTime()
+  );
 }
 
 function ZyronMark({ size = 48 }: { size?: number }) {
@@ -89,6 +166,8 @@ export default function Home() {
   const [directChatUser, setDirectChatUser] = useState<{ id: string; public_id: number; nickname: string; avatar_url: string | null } | null>(null);
   const [directConversationId, setDirectConversationId] = useState<string | null>(null);
   const [directMessages, setDirectMessages] = useState<{ id: string; sender_id: string; content: string; created_at: string }[]>([]);
+  const [directConversations, setDirectConversations] = useState<DirectConversation[]>([]);
+  const [directConversationListError, setDirectConversationListError] = useState("");
   const [directMessageInput, setDirectMessageInput] = useState("");
   const [directChatError, setDirectChatError] = useState("");
   const [screen, setScreen] = useState<"conversas" | "comunidades">("conversas");
@@ -170,6 +249,8 @@ export default function Home() {
           setDirectChatUser(null);
           setDirectConversationId(null);
           setDirectMessages([]);
+          setDirectConversations([]);
+          setDirectConversationListError("");
           setDirectMessageInput("");
           setDirectChatError("");
           localStorage.removeItem("dff_nickname");
@@ -188,6 +269,8 @@ export default function Home() {
         setDirectChatUser(null);
         setDirectConversationId(null);
         setDirectMessages([]);
+        setDirectConversations([]);
+        setDirectConversationListError("");
         setDirectMessageInput("");
         setDirectChatError("");
 
@@ -231,6 +314,40 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (!supabase || !storageScope) {
+      setDirectConversations([]);
+      setDirectConversationListError("");
+      return;
+    }
+
+    let active = true;
+    let loading = false;
+    const refresh = async () => {
+      if (loading) return;
+      loading = true;
+      try {
+        const conversations = await loadDirectConversations(supabase, storageScope);
+        if (active) {
+          setDirectConversations(conversations);
+          setDirectConversationListError("");
+        }
+      } catch (error) {
+        console.error("Não foi possível carregar as conversas privadas.", error);
+        if (active) setDirectConversationListError("Não foi possível carregar as conversas privadas. Confira a conexão e as permissões do Supabase.");
+      } finally {
+        loading = false;
+      }
+    };
+
+    void refresh();
+    const interval = window.setInterval(() => { void refresh(); }, 8000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [storageScope]);
+
+  useEffect(() => {
     if (!hydrated) return;
     if (!isSupabaseConfigured) {
       saveToStorage("dff_nickname", nickname);
@@ -257,6 +374,13 @@ export default function Home() {
   const myChats = groups.filter((g) => g.isJoined && !g.isFavorite).filter((g) =>
     g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.lastMessage.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  const directSearchTerm = searchQuery.trim().toLowerCase();
+  const filteredDirectConversations = directConversations.filter((conversation) =>
+    (conversation.contact.nickname + " " + conversation.contact.public_id + " " + (conversation.last_message || ""))
+      .toLowerCase()
+      .includes(directSearchTerm)
+  );
+
   const allCommunities = groups.filter((g) => (g.isPublic !== false || g.isJoined) && (
     g.name.toLowerCase().includes(searchQuery.toLowerCase()) || g.description.toLowerCase().includes(searchQuery.toLowerCase())
   ));
@@ -312,6 +436,13 @@ export default function Home() {
     const { data: history, error: historyError } = await supabase.from("direct_messages").select("id, sender_id, content, created_at").eq("conversation_id", conversationId).order("created_at", { ascending: true });
     if (historyError) setDirectChatError("Conversa aberta, mas não consegui carregar as mensagens.");
     else setDirectMessages((history || []) as typeof directMessages);
+    try {
+      setDirectConversations(await loadDirectConversations(supabase, currentId));
+      setDirectConversationListError("");
+    } catch (error) {
+      console.error("Não foi possível atualizar a lista de conversas privadas.", error);
+      setDirectConversationListError("Não foi possível atualizar a lista de conversas privadas.");
+    }
   };
 
   useEffect(() => {
@@ -338,12 +469,20 @@ export default function Home() {
         setDirectMessages((previous) => previous.some((message) => message.id === incoming.id)
           ? previous
           : [...previous, incoming]);
+        setDirectConversations((previous) => {
+          const conversation = previous.find((item) => item.id === directConversationId);
+          if (!conversation) return previous;
+          const updated = { ...conversation, last_message: incoming.content, last_message_at: incoming.created_at };
+          return [updated, ...previous.filter((item) => item.id !== directConversationId)];
+        });
       })
       .subscribe((status) => {
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") void refreshMessages();
       });
+    const refreshInterval = window.setInterval(() => { void refreshMessages(); }, 5000);
     return () => {
       active = false;
+      window.clearInterval(refreshInterval);
       void supabase.removeChannel(channel);
     };
   }, [directConversationId]);
@@ -355,8 +494,17 @@ export default function Home() {
     if (!authData.user) return;
     const { data, error } = await supabase.from("direct_messages").insert({ conversation_id: directConversationId, sender_id: authData.user.id, content }).select("id, sender_id, content, created_at").single();
     if (error) { console.error("Falha ao enviar mensagem privada:", error); setDirectChatError("A mensagem não foi enviada. Verifique se o SQL e as permissões do Supabase estão configurados."); return; }
-    setDirectMessages((previous) => [...previous, data as typeof directMessages[number]]);
+    setDirectMessages((previous) => previous.some((message) => message.id === data.id)
+      ? previous
+      : [...previous, data as typeof directMessages[number]]);
+    setDirectConversations((previous) => {
+      const conversation = previous.find((item) => item.id === directConversationId);
+      if (!conversation) return previous;
+      const updated = { ...conversation, last_message: data.content, last_message_at: data.created_at };
+      return [updated, ...previous.filter((item) => item.id !== directConversationId)];
+    });
     setDirectMessageInput("");
+    setDirectChatError("");
   };
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [currentMessages]);
@@ -847,6 +995,46 @@ export default function Home() {
         </div>
 
         <div className="flex-1 overflow-y-auto pb-24 md:pb-0">
+          {directConversationListError && (
+            <div role="alert" className="mx-4 my-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+              {directConversationListError}
+            </div>
+          )}
+          {filteredDirectConversations.length > 0 && (
+            <div className="pb-2">
+              <div className="px-4 pt-3 pb-2 flex items-center gap-2 text-wa-green">
+                <MessageCircle size={16} />
+                <h2 className="text-xs font-semibold uppercase tracking-wide">Conversas privadas</h2>
+              </div>
+              {filteredDirectConversations.map((conversation) => (
+                <button
+                  key={conversation.id}
+                  data-testid={"direct-conversation-" + conversation.id}
+                  onClick={() => { void openDirectChat(conversation.contact); }}
+                  className={"w-full flex items-center gap-3 px-4 py-2.5 hover:bg-wa-hover text-left " + (directConversationId === conversation.id ? "bg-wa-hover" : "")}
+                >
+                  {conversation.contact.avatar_url ? (
+                    <img src={conversation.contact.avatar_url} alt="" className="w-[52px] h-[52px] rounded-full object-cover shrink-0" />
+                  ) : (
+                    <div className="w-[52px] h-[52px] rounded-full bg-wa-green flex items-center justify-center text-white font-semibold text-xl shrink-0">
+                      {conversation.contact.nickname.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0 py-1 border-b border-wa-border">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-medium text-wa-text truncate text-[16px]">{conversation.contact.nickname}</h3>
+                      <span className="text-[11px] text-wa-muted shrink-0">ID {conversation.contact.public_id}</span>
+                    </div>
+                    <p className="text-[14px] text-wa-secondary truncate mt-0.5">
+                      {directConversationId === conversation.id && directMessages.length
+                        ? directMessages[directMessages.length - 1].content
+                        : conversation.last_message || "Conversa privada"}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
           {favoriteGroups.length > 0 && (
             <div className="pb-2">
               <div className="px-4 pt-3 pb-2 flex items-center gap-2 text-wa-green">
@@ -870,11 +1058,11 @@ export default function Home() {
               ))}
             </div>
           )}
-          {myChats.length === 0 && favoriteGroups.length === 0 ? (
+          {myChats.length === 0 && favoriteGroups.length === 0 && filteredDirectConversations.length === 0 ? (
             <div className="p-10 text-center text-wa-muted">
               <MessageCircle size={40} className="mx-auto mb-3 opacity-30" />
-              <p className="text-sm">Nenhuma conversa ainda</p>
-              <p className="text-xs mt-1">Entre em uma comunidade</p>
+              <p className="text-sm">{searchQuery.trim() ? "Nenhuma conversa encontrada" : directConversationListError ? "Não foi possível carregar as conversas" : "Nenhuma conversa ainda"}</p>
+              <p className="text-xs mt-1">{searchQuery.trim() ? "Tente buscar outro nome ou ID." : directConversationListError ? "A lista será atualizada novamente em instantes." : "Entre em uma comunidade"}</p>
               <button onClick={() => { setScreen("comunidades"); setSearchQuery(""); }} className="mt-3 text-wa-green text-sm hover:underline">Ir para Comunidades FF</button>
             </div>
           ) : myChats.length > 0 && (
